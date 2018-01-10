@@ -4,7 +4,7 @@ FILES_REGEX := "(.*\.lua|./mem.*\.json|./kits.*\.wav|./gfx.*\.png)$$"
 GAME_FILES := $(shell find . -regextype posix-egrep -regex $(FILES_REGEX))
 BUILD_FILE := $(PROJECT_NAME)_$(shell date +%Y%m%dT%H%M%S).love
 
-snd:
+sfxr:
 	sfxr
 
 run:
