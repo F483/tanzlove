@@ -154,7 +154,7 @@ function ui._addSelectorButtons(rect, onInc, onDec, onShow)
         onDec() -- decrement value
         onShow() -- show new value
     end)
-    local show = Button({x + 8, y, 24, 8}, ui.cam, onShow, onShow)
+    local show = Button({x + 8, y, 24, 8}, ui.cam, onShow, onShow, false, false)
     local inc = Button({x + 8 + 24, y, 8, 8}, ui.cam, function () 
         onInc() -- increment value
         onShow() -- show new value

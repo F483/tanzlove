@@ -5,10 +5,6 @@ function love.mousepressed(x, y, button, istouch)
     ui.mousepressed(x, y, button, istouch)
 end
 
-function love.keyreleased(key)
-    ui.keyreleased(key)
-end
-
 function love.keypressed(key)
     ui.keypressed(key)
 end
