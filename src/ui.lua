@@ -164,8 +164,43 @@ function ui._addSelectorButtons(rect, onInc, onDec, onShow)
     table.insert(ui.buttons, show)
 end
 
+function ui._toggleSolo(deck, track)
+    if player.setup.deck[deck].solo == track then
+        player.setup.deck[deck].solo = nil
+    else
+        player.setup.deck[deck].solo = track
+    end
+end
+
+function ui._toggleMute(deck, track)
+    local current_value = player.setup.deck[deck].mute[track]
+    player.setup.deck[deck].mute[track] = not current_value
+end
+
 function ui._initDeck(deck)
 
+    -- track buttons
+    for t = 1, 4 do
+
+        -- select
+        table.insert(ui.buttons, Button(
+            RECTS[deck].track[t].select, ui.cam, 
+            function () ui.selected[deck] = t end
+        ))
+
+        -- mute
+        table.insert(ui.buttons, Button(
+            RECTS[deck].track[t].mute, ui.cam, 
+            function () ui._toggleMute(deck, t) end
+        ))
+
+        -- solo
+        table.insert(ui.buttons, Button(
+            RECTS[deck].track[t].solo, ui.cam, 
+            function () ui._toggleSolo(deck, t) end
+        ))
+
+    end
 
     -- select deck
     table.insert(ui.buttons, Button(
@@ -174,22 +209,22 @@ function ui._initDeck(deck)
 
 end
 
-function ui.onBpmInc()
+function ui.bpmInc()
     player.setup.bpm = math.min(player.setup.bpm + 1, player.limits.bpm.max)
 end
 
-function ui.onBpmDec()
+function ui.bpmDec()
     player.setup.bpm = math.max(player.setup.bpm - 1, player.limits.bpm.min)
 end
 
-function ui.onBpmShow()
+function ui.bpmShow()
     ui.show_ttls.bpm = SHOW_TIME
 end
 
 function ui.init()
 
     -- bpm button
-    ui._addSelectorButtons(RECTS.bpm, ui.onBpmInc, ui.onBpmDec, ui.onBpmShow)
+    ui._addSelectorButtons(RECTS.bpm, ui.bpmInc, ui.bpmDec, ui.bpmShow)
 
 
     ui._initDeck("left")
