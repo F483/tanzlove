@@ -134,7 +134,7 @@ local RECTS = {
 
 -- interface state
 local ui = {
-    cam = CAM_LEFT,
+    cam = util.deepCopy(CAM_LEFT),
     deck = "right", -- or left
     selected = {
         left = 1,
@@ -165,6 +165,13 @@ function ui._addSelectorButtons(rect, onInc, onDec, onShow)
 end
 
 function ui._initDeck(deck)
+
+
+    -- select deck
+    table.insert(ui.buttons, Button(
+        RECTS[deck].select, ui.cam, function () ui.deck = deck end
+    ))
+
 end
 
 function ui.onBpmInc()
