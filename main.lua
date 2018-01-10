@@ -1,4 +1,5 @@
 local gfx = require("src.gfx")
+local state = require("src.state")
 local ui = require("src.ui")
 
 function love.mousepressed(x, y, button, istouch)
@@ -21,5 +22,6 @@ function love.draw()
 end
 
 function love.update(delta_time)
+    state.update(delta_time)
     ui.update(delta_time)
 end

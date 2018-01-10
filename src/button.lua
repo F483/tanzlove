@@ -12,8 +12,8 @@ function Button:init(rect, cam, onPress, onOver, drawPress, drawOver)
     self.cam = cam
     self.onPress = onPress
     self.onOver = onOver
-    self.drawPress = drawPress == nil or drawPress == true
-    self.drawOver = drawOver == nil or drawOver == true
+    self.drawPress = drawPress == nil or drawPress == true -- default to true
+    self.drawOver = drawOver == nil or drawOver == true -- default to true
 end
 
 function Button:_overButton(x, y)
