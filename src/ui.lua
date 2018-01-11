@@ -1,12 +1,10 @@
 local gfx = require("src.gfx")
+local vector = require("lib.hump.vector-light")
 local util = require("src.util")
-local player = require("src.player")
-local state = require("src.state")
+local sys = require("src.sys")
 local colors = require("src.colors")
 local rects = require("src.rects")
 local Button = require("src.button")
-
-local SHOW_TIME = 1.0 -- seconds
 
 -- board
 local WIDTH = 236
@@ -17,7 +15,6 @@ local CAM_SPEED = 2 -- pixel per second
 local CAM_LEFT = {0, 0}
 local CAM_RIGHT = {76, 0}
 
--- interface state
 local ui = {
     cam = util.deepCopy(CAM_LEFT),
     buttons = {}
@@ -25,15 +22,9 @@ local ui = {
 
 function ui._addSelectorButtons(rect, onInc, onDec, onShow)
     local x, y, w, h = unpack(rect)
-    local dec = Button({x, y, 8, 8}, ui.cam, function () 
-        onDec() -- decrement value
-        onShow() -- show new value
-    end)
+    local dec = Button({x, y, 8, 8}, ui.cam, onDec)
     local show = Button({x + 8, y, 24, 8}, ui.cam, onShow, onShow, false, false)
-    local inc = Button({x + 8 + 24, y, 8, 8}, ui.cam, function () 
-        onInc() -- increment value
-        onShow() -- show new value
-    end)
+    local inc = Button({x + 8 + 24, y, 8, 8}, ui.cam, onInc)
     table.insert(ui.buttons, inc)
     table.insert(ui.buttons, dec)
     table.insert(ui.buttons, show)
@@ -47,19 +38,19 @@ function ui._initDeck(deck)
         -- select
         table.insert(ui.buttons, Button(
             rects[deck].track[t].select, ui.cam, 
-            function () state.trackSelect(ui, deck, t) end
+            function () sys.trackSelect(t, deck) end
         ))
 
         -- mute
         table.insert(ui.buttons, Button(
             rects[deck].track[t].mute, ui.cam, 
-            function () state.toggleMute(deck, t) end
+            function () sys.toggleMute(t, deck) end
         ))
 
         -- solo
         table.insert(ui.buttons, Button(
             rects[deck].track[t].solo, ui.cam, 
-            function () state.toggleSolo(deck, t) end
+            function () sys.toggleSolo(t, deck) end
         ))
 
     end
@@ -67,54 +58,55 @@ function ui._initDeck(deck)
     -- vol
     ui._addSelectorButtons(
         rects[deck].vol, 
-        function () state.volInc(deck) end, 
-        function () state.volDec(deck) end, 
-        function () state.volShow(deck) end
+        function () sys.volInc(deck) end, 
+        function () sys.volDec(deck) end, 
+        function () sys.volTouch(deck) end
     )
 
     -- snd
     ui._addSelectorButtons(
         rects[deck].snd, 
-        function () state.sndInc(deck) end, 
-        function () state.sndDec(deck) end, 
-        function () state.sndShow(deck) end
+        function () sys.sndInc(deck) end, 
+        function () sys.sndDec(deck) end, 
+        function () sys.sndTouch(deck) end
     )
 
     -- num
     ui._addSelectorButtons(
         rects[deck].num, 
-        function () state.numInc(deck) end, 
-        function () state.numDec(deck) end, 
-        function () state.numShow(deck) end
+        function () sys.numInc(deck) end, 
+        function () sys.numDec(deck) end, 
+        function () sys.numTouch(deck) end
     )
 
     -- rot
     ui._addSelectorButtons(
         rects[deck].rot, 
-        function () state.rotInc(deck) end, 
-        function () state.rotDec(deck) end, 
-        function () state.rotShow(deck) end
+        function () sys.rotInc(deck) end, 
+        function () sys.rotDec(deck) end, 
+        function () sys.rotTouch(deck) end
     )
 
     -- len
     ui._addSelectorButtons(
         rects[deck].len, 
-        function () state.lenInc(deck) end, 
-        function () state.lenDec(deck) end, 
-        function () state.lenShow(deck) end
+        function () sys.lenInc(deck) end, 
+        function () sys.lenDec(deck) end, 
+        function () sys.lenTouch(deck) end
     )
 
     -- mem
     ui._addSelectorButtons(
         rects[deck].mem, 
-        function () state.memInc(deck) end, 
-        function () state.memDec(deck) end, 
-        function () state.memShow(deck) end
+        function () sys.memInc(deck) end, 
+        function () sys.memDec(deck) end, 
+        function () sys.memTouch(deck) end
     )
 
     -- select deck
     table.insert(ui.buttons, Button(
-        rects[deck].select, ui.cam, function () state.deck = deck end
+        rects[deck].select, ui.cam, 
+        function () sys.deckSelect(deck) end
     ))
 
 end
@@ -124,9 +116,9 @@ function ui.init()
     -- bpm button
     ui._addSelectorButtons(
         rects.bpm, 
-        state.bpmInc, 
-        state.bpmDec, 
-        state.bpmShow
+        sys.bpmInc, 
+        sys.bpmDec, 
+        sys.bpmShow
     )
 
     -- exit button
@@ -144,7 +136,7 @@ function ui.mousepressed(x, y, mouse_button, istouch)
 end
 
 function ui._exit()
-    -- TODO save program state
+    -- TODO save program sys
     love.event.quit()
 end
 
@@ -176,34 +168,34 @@ function ui._drawTrackButtons(deck, t)
 
     -- select track
     local color = colors.track[t].up_inactive
-    if state.selected[deck] == t then
+    if sys.getSelectedTrack(deck) == t then
         color = colors.track[t].down_selected
     end
     ui._drawField(color, colors.eigengrau, t, rects[deck].track[t]["select"])
 
     -- mute track
-    if state.selected[deck] == t then
+    if sys.getSelectedTrack(deck) == t then
         color = colors.track[t].up_selected
-        if player.setup[deck].mute[t] then
+        if sys.player[deck].mute[t] then
             color = colors.track[t].down_selected
         end
     else
         color = colors.track[t].up_inactive
-        if player.setup[deck].mute[t] then
+        if sys.player[deck].mute[t] then
             color = colors.track[t].down_inactive
         end
     end
     ui._drawField(color, colors.eigengrau, "M", rects[deck].track[t]["mute"])
 
     -- solo track
-    if state.selected[deck] == t then
+    if sys.getSelectedTrack(deck) == t then
         color = colors.track[t].up_selected
-        if player.setup[deck].solo == t then
+        if sys.player[deck].solo == t then
             color = colors.track[t].down_selected
         end
     else -- inactive
         color = colors.track[t].up_inactive
-        if player.setup[deck].solo == t then
+        if sys.player[deck].solo == t then
             color = colors.track[t].down_inactive
         end
     end
@@ -214,7 +206,7 @@ function ui.update(delta_time)
 
     -- move camera if needed
     local cx, cy = unpack(ui.cam)
-    if state.deck == "right" then
+    if sys.getSelectedDeck() == "right" then
         local tx, ty = unpack(CAM_RIGHT)
         cx = math.min(tx, cx + CAM_SPEED)
     else -- "left"
@@ -224,7 +216,6 @@ function ui.update(delta_time)
     ui.cam[1] = cx
     ui.cam[2] = cy
 
-
     -- update buttons
     for i, button in ipairs(ui.buttons) do
         button:update(delta_time)
@@ -233,26 +224,27 @@ end
 
 function ui._drawDeck(deck)
 
-    local track_color = colors.track[state.selected[deck]].up_selected
+    local selected_track = sys.getSelectedTrack()
+    local track_color = colors.track[selected_track].up_selected
     local deck_color = colors[deck].up_selected -- TODO handle not selected
 
-    -- TODO desplay current value if recent mouseover or press
-    ui._drawSelector(track_color, colors.eigengrau, "VOL", rects[deck].vol) 
+    local label = sys.volDisplay(deck)
+    ui._drawSelector(track_color, colors.eigengrau, label, rects[deck].vol) 
     
-    -- TODO desplay current value if recent mouseover or press
-    ui._drawSelector(track_color, colors.eigengrau, "SND", rects[deck].snd) 
+    label = sys.sndDisplay(deck)
+    ui._drawSelector(track_color, colors.eigengrau, label, rects[deck].snd) 
     
-    -- TODO desplay current value if recent mouseover or press
-    ui._drawSelector(track_color, colors.eigengrau, "NUM", rects[deck].num) 
+    label = sys.numDisplay(deck)
+    ui._drawSelector(track_color, colors.eigengrau, label, rects[deck].num) 
 
-    -- TODO desplay current value if recent mouseover or press
-    ui._drawSelector(track_color, colors.eigengrau, "ROT", rects[deck].rot) 
+    label = sys.rotDisplay(deck)
+    ui._drawSelector(track_color, colors.eigengrau, label, rects[deck].rot) 
     
-    -- TODO desplay current value if recent mouseover or press
-    ui._drawSelector(deck_color, colors.eigengrau, "LEN", rects[deck].len) 
+    label = sys.lenDisplay(deck)
+    ui._drawSelector(deck_color, colors.eigengrau, label, rects[deck].len) 
     
-    -- TODO desplay current value if recent mouseover or press
-    ui._drawSelector(deck_color, colors.eigengrau, "MEM", rects[deck].mem) 
+    label = sys.memDisplay(deck)
+    ui._drawSelector(deck_color, colors.eigengrau, label, rects[deck].mem) 
 
     -- draw select
     local label = "L"
@@ -260,7 +252,7 @@ function ui._drawDeck(deck)
         label = "R"
     end
     local color = colors[deck].up_inactive
-    if deck == state.deck then
+    if deck == sys.getSelectedDeck() then
         local color = colors[deck].down_selected
     end
     ui._drawField(color, colors.eigengrau, label, rects[deck].select)
@@ -276,12 +268,9 @@ function ui.draw()
     ui._drawField(colors.eigengrau, colors.white, "EXIT#", rects.exit)
 
     -- bmp
-    if state.show_ttls.bpm > 0.0 then
-        local label = string.format("%03d", player.setup.bpm)
-        ui._drawSelector(colors.eigengrau, colors.white, label, rects.bpm) 
-    else
-        ui._drawSelector(colors.eigengrau, colors.white, "BPM", rects.bpm) 
-    end
+    ui._drawSelector(colors.eigengrau, colors.white,
+                     sys.bpmDisplay(), rects.bpm)
+
 
     -- track buttons
     for t = 1, 4 do
@@ -293,17 +282,31 @@ function ui.draw()
     ui._drawDeck("right")
 
     -- TODO deck fader
-    
 
     -- track orbits
-    local x, y, r, d = util.camAdjust(rects.atom, ui.cam)
+    local x, y, outer_r, orbit_delta = util.camAdjust(rects.atom, ui.cam)
     for t = 1, 4 do
+        local orbit_r = outer_r - ((t-1) * orbit_delta)
+
+        -- draw background circle
         local color = colors.gray
-        if state.selected[state.deck] == t then
+        if sys.getSelectedTrack() == t then
             color = colors.track[t].up_selected
         end
         love.graphics.setColor(unpack(color))
-        love.graphics.circle("line", x, y, r - ((t-1) * d))
+        love.graphics.circle("line", x, y, orbit_r, 64)
+
+        -- draw orbit beat backgrounds
+        local len = sys.getLen()
+        for b = 0, len - 1 do
+
+            -- TODO account for track beats and when last played
+            
+            local fraction = math.pi * 2 * (b / len)
+            local dx, dy = vector.rotate(fraction, 0.0, - orbit_r)
+            local tx, ty = vector.add(x, y, dx, dy)
+            love.graphics.circle("fill", tx, ty, 1, 16)
+        end
     end
 
     -- draw buttons
