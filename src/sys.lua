@@ -22,9 +22,6 @@ local SAMPLES = {
 local sys = {
 
     -- TODO move to player
-    clock = 0.0,
-    samples = {},
-    history = {}, -- when the sample was last played for a given deck, track
 
     limits = {
         vol = {min=0, max=15},
@@ -41,12 +38,16 @@ local sys = {
     player = { 
         bpm = 128,
         fade = 1.0, -- 0.0 = left, 1.0 = right
+        samples = {},
+        history = {}, -- when the sample was last played for a given deck, track
         left = {
+            clock = 0.0,
             pattern = 1, -- memory index
             solo = nil,
             mute = {false, false, false, false, false, false, false, false},
         },
         right = {
+            clock = 0.0,
             pattern = 1, -- memory index
             solo = nil,
             mute = {false, false, false, false, false, false, false, false},
@@ -77,15 +78,15 @@ function sys.init()
 
     -- every track has its own sample bank to allow parallel play
     for i, deck in ipairs({"left", "right"}) do 
-        sys.samples[deck] = {}
-        sys.history[deck] = {}
+        sys.player.samples[deck] = {}
+        sys.player.history[deck] = {}
         for track = 1, 4 do
-            sys.samples[deck][track] = {}
-            sys.history[deck][track] = {}
+            sys.player.samples[deck][track] = {}
+            sys.player.history[deck][track] = {}
             for i, filename in ipairs(SAMPLES) do
                 local snd = love.audio.newSource(filename, "static")
-                table.insert(sys.samples[deck][track], snd)
-                table.insert(sys.history[deck][track], nil)
+                table.insert(sys.player.samples[deck][track], snd)
+                table.insert(sys.player.history[deck][track], nil)
             end
         end
     end
@@ -98,14 +99,24 @@ function sys.getLoopLen(deck)
 end
 
 function sys.getLoopProgress(deck)
+    local deck = deck or sys.display.deck
     local looplen = sys.getLoopLen(deck)
-    return (sys.clock % looplen) / looplen
+    return (sys.player[deck].clock % looplen) / looplen
+end
+
+function sys._getTotalProgress(deck)
+    return sys.player[deck].clock / sys.getLoopLen(deck)
+end
+
+function sys._setTotalProgress(progress, deck)
+    sys.player[deck].clock = progress * sys.getLoopLen(deck)
 end
 
 function sys.update(dt)
 
-    -- update clock
-    sys.clock = sys.clock + dt
+    -- update deck clocks
+    sys.player.left.clock = sys.player.right.clock + dt
+    sys.player.right.clock = sys.player.right.clock + dt
 
     -- update ttls
     local ttls = sys.display.show_ttls
@@ -132,17 +143,27 @@ end
 ---------
 
 function sys.bpmInc()
+    local prev_left = sys._getTotalProgress("left")
+    local prev_right = sys._getTotalProgress("right")
+
     local val = sys.player.bpm
     sys.player.bpm = math.min(val + 1, sys.limits.bpm.max)
     sys.bpmTouch()
-    -- FIXME correct clock
+
+    sys._setTotalProgress(prev_left, "left")
+    sys._setTotalProgress(prev_right, "right")
 end
 
 function sys.bpmDec()
+    local prev_left = sys._getTotalProgress("left")
+    local prev_right = sys._getTotalProgress("right")
+
     local val = sys.player.bpm
     sys.player.bpm = math.max(val - 1, sys.limits.bpm.min)
     sys.bpmTouch()
-    -- FIXME correct clock
+
+    sys._setTotalProgress(prev_left, "left")
+    sys._setTotalProgress(prev_right, "right")
 end
 
 function sys.bpmTouch()
@@ -306,7 +327,7 @@ end
 function sys.play(deck, track)
     local deck = deck or sys.display.deck
     local track = track or sys.display.selected[deck]
-    sys.samples[deck][track]:play()
+    sys.player.samples[deck][track]:play()
 end
 
 ---------
@@ -365,22 +386,24 @@ end
 
 function sys.lenInc(deck) 
     local deck = deck or sys.display.deck
+    local prev = sys._getTotalProgress(deck)
     local pattern_index = sys.player[deck].pattern
     local val = sys.memory[pattern_index].len
     val = math.min(val + 1, sys.limits.len.max)
     sys.memory[pattern_index].len = val
     sys.lenTouch(deck)
-    -- FIXME correct clock
+    sys._setTotalProgress(prev, deck)
 end
 
 function sys.lenDec(deck) 
     local deck = deck or sys.display.deck
+    local prev = sys._getTotalProgress(deck)
     local pattern_index = sys.player[deck].pattern
     local val = sys.memory[pattern_index].len
     val = math.max(val - 1, sys.limits.len.min)
     sys.memory[pattern_index].len = val
     sys.lenTouch(deck)
-    -- FIXME correct clock
+    sys._setTotalProgress(prev, deck)
 end
 
 function sys.lenTouch(deck) 
@@ -409,20 +432,22 @@ end
 
 function sys.memInc(deck) 
     local deck = deck or sys.display.deck
+    local prev = sys._getTotalProgress(deck)
     local val = sys.player[deck].pattern
     val = math.min(val + 1, sys.limits.mem.max)
     sys.player[deck].pattern = val
     sys.deckTouch(deck)
-    -- FIXME correct clock
+    sys._setTotalProgress(prev, deck)
 end
 
 function sys.memDec(deck) 
     local deck = deck or sys.display.deck
+    local prev = sys._getTotalProgress(deck)
     local val = sys.player[deck].pattern
     val = math.max(val - 1, sys.limits.mem.min)
     sys.player[deck].pattern = val
     sys.deckTouch(deck)
-    -- FIXME correct clock
+    sys._setTotalProgress(prev, deck)
 end
 
 function sys.memTouch(deck) 
