@@ -118,7 +118,7 @@ function ui.init()
         rects.bpm, 
         sys.bpmInc, 
         sys.bpmDec, 
-        sys.bpmShow
+        sys.bpmTouch
     )
 
     -- exit button
@@ -271,7 +271,6 @@ function ui.draw()
     ui._drawSelector(colors.eigengrau, colors.white,
                      sys.bpmDisplay(), rects.bpm)
 
-
     -- track buttons
     for t = 1, 4 do
         ui._drawTrackButtons("left", t)
@@ -308,6 +307,13 @@ function ui.draw()
             love.graphics.circle("fill", tx, ty, 1, 16)
         end
     end
+
+    -- draw clock hand
+    local progress = sys.getLoopProgress()
+    local dx, dy = vector.rotate(math.pi *2.0 * progress, 0.0, - (outer_r+4))
+    local tx, ty = vector.add(x, y, dx, dy)
+    love.graphics.setColor(unpack(colors.gray))
+    love.graphics.line(x, y, tx, ty)
 
     -- draw buttons
     for i, button in ipairs(ui.buttons) do

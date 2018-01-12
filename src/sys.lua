@@ -12,7 +12,19 @@ local DEFAULT_PATTERN = {
     }
 }
 
+local SAMPLES = {
+    "snd/BDL.wav", "snd/BDS.wav", "snd/CLP.wav", "snd/CLV.wav",
+    "snd/CNG.wav", "snd/COW.wav", "snd/CYM.wav", "snd/HHC.wav",
+    "snd/HHO.wav", "snd/HHP.wav", "snd/SD1.wav", "snd/SD2.wav",
+    "snd/SHK.wav", "snd/TMH.wav", "snd/TML.wav", "snd/TMM.wav",
+}
+
 local sys = {
+
+    -- TODO move to player
+    clock = 0.0,
+    samples = {},
+    history = {}, -- when the sample was last played for a given deck, track
 
     limits = {
         vol = {min=0, max=15},
@@ -56,12 +68,46 @@ local sys = {
 }
 
 function sys.init()
+
+    -- load memomry slots
     for m = sys.limits.mem.min, sys.limits.mem.max do
+        -- TODO check and load if saved
         sys.memory[m] = util.deepCopy(DEFAULT_PATTERN)
+    end
+
+    -- every track has its own sample bank to allow parallel play
+    for i, deck in ipairs({"left", "right"}) do 
+        sys.samples[deck] = {}
+        sys.history[deck] = {}
+        for track = 1, 4 do
+            sys.samples[deck][track] = {}
+            sys.history[deck][track] = {}
+            for i, filename in ipairs(SAMPLES) do
+                local snd = love.audio.newSource(filename, "static")
+                table.insert(sys.samples[deck][track], snd)
+                table.insert(sys.history[deck][track], nil)
+            end
+        end
     end
 end
 
+function sys.getLoopLen(deck)
+    local deck = deck or sys.display.deck
+    local factor = sys.getLen(deck) / sys.limits.len.max
+    return (60.0 / sys.player.bpm) * 4 * factor
+end
+
+function sys.getLoopProgress(deck)
+    local looplen = sys.getLoopLen(deck)
+    return (sys.clock % looplen) / looplen
+end
+
 function sys.update(dt)
+
+    -- update clock
+    sys.clock = sys.clock + dt
+
+    -- update ttls
     local ttls = sys.display.show_ttls
     ttls.bpm = math.max(0.0, ttls.bpm - dt)
     ttls.left.len = math.max(0.0, ttls.left.len - dt)
@@ -76,6 +122,9 @@ function sys.update(dt)
     ttls.right.snd = math.max(0.0, ttls.right.snd - dt)
     ttls.right.num = math.max(0.0, ttls.right.num - dt)
     ttls.right.rot = math.max(0.0, ttls.right.rot - dt)
+
+    -- play samples 
+    
 end
 
 ---------
@@ -86,12 +135,14 @@ function sys.bpmInc()
     local val = sys.player.bpm
     sys.player.bpm = math.min(val + 1, sys.limits.bpm.max)
     sys.bpmTouch()
+    -- FIXME correct clock
 end
 
 function sys.bpmDec()
     local val = sys.player.bpm
     sys.player.bpm = math.max(val - 1, sys.limits.bpm.min)
     sys.bpmTouch()
+    -- FIXME correct clock
 end
 
 function sys.bpmTouch()
@@ -127,7 +178,6 @@ function sys.deckTouch(deck)
     sys.lenTouch(deck)
     sys.memTouch(deck)
 end
-
 
 -----------
 -- TRACK --
@@ -253,6 +303,12 @@ function sys.sndDisplay(deck)
     return "SND"
 end
 
+function sys.play(deck, track)
+    local deck = deck or sys.display.deck
+    local track = track or sys.display.selected[deck]
+    sys.samples[deck][track]:play()
+end
+
 ---------
 -- NUM --
 ---------
@@ -314,6 +370,7 @@ function sys.lenInc(deck)
     val = math.min(val + 1, sys.limits.len.max)
     sys.memory[pattern_index].len = val
     sys.lenTouch(deck)
+    -- FIXME correct clock
 end
 
 function sys.lenDec(deck) 
@@ -323,6 +380,7 @@ function sys.lenDec(deck)
     val = math.max(val - 1, sys.limits.len.min)
     sys.memory[pattern_index].len = val
     sys.lenTouch(deck)
+    -- FIXME correct clock
 end
 
 function sys.lenTouch(deck) 
@@ -355,6 +413,7 @@ function sys.memInc(deck)
     val = math.min(val + 1, sys.limits.mem.max)
     sys.player[deck].pattern = val
     sys.deckTouch(deck)
+    -- FIXME correct clock
 end
 
 function sys.memDec(deck) 
@@ -363,6 +422,7 @@ function sys.memDec(deck)
     val = math.max(val - 1, sys.limits.mem.min)
     sys.player[deck].pattern = val
     sys.deckTouch(deck)
+    -- FIXME correct clock
 end
 
 function sys.memTouch(deck) 
