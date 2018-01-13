@@ -131,7 +131,6 @@ function sys.getRhythm(d, t)
     local num = sys.getNum(d, t)
     local rot = sys.getRot(d, t)
 
-
     assert(len == 16, "only 16 beats implemented ...")
 
     -- FIXME compute all lookups on startup, encluding rotation index

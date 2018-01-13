@@ -294,6 +294,8 @@ function ui.draw()
     local x, y, outer_r, orbit_delta = util.camAdjust(rects.atom, ui.cam)
     for t = 1, 4 do
         local orbit_r = outer_r - ((t-1) * orbit_delta)
+        local rot_rs = outer_r - ((t-1) * orbit_delta) - orbit_delta / 2
+        local rot_rf = outer_r - ((t-1) * orbit_delta) + orbit_delta / 2
 
         -- draw background circle
         local color = colors.gray
@@ -305,18 +307,29 @@ function ui.draw()
 
         -- draw orbit beat backgrounds
         local len = sys.getLen(d)
+        local rot = sys.getRot(d, t)
         local rhythm = sys.getRhythm(d, t)
         for b = 1, len do
 
             -- TODO draw beats recently played
             
             local fraction = math.pi * 2 * ((b - 1) / (len))
+
+            -- draw track rotation hand
+            if rot == b-1 then
+                local sdx, sdy = vector.rotate(fraction, 0.0, - rot_rs)
+                local stx, sty = vector.add(x, y, sdx, sdy)
+                local fdx, fdy = vector.rotate(fraction, 0.0, - rot_rf)
+                local ftx, fty = vector.add(x, y, fdx, fdy)
+                love.graphics.line(stx, sty, ftx, fty)
+            end
+
+            -- draw beat
             local dx, dy = vector.rotate(fraction, 0.0, - orbit_r)
             local tx, ty = vector.add(x, y, dx, dy)
-
-            local r = 1
+            local r = 1.25
             if rhythm[b] ~= 0 then
-                r = 2
+                r = 2.25
             end
             love.graphics.circle("fill", tx, ty, r, 16)
         end
