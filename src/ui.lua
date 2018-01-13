@@ -20,10 +20,10 @@ local ui = {
     buttons = {}
 }
 
-function ui._addSelectorButtons(rect, onInc, onDec, onShow)
+function ui._addSelectorButtons(rect, onInc, onDec, onPress, onOver)
     local x, y, w, h = unpack(rect)
     local dec = Button({x, y, 8, 8}, ui.cam, onDec)
-    local show = Button({x + 8, y, 24, 8}, ui.cam, onShow, onShow, false, false)
+    local show = Button({x + 8, y, 24, 8}, ui.cam, onPress, onOver, false, false)
     local inc = Button({x + 8 + 24, y, 8, 8}, ui.cam, onInc)
     table.insert(ui.buttons, inc)
     table.insert(ui.buttons, dec)
@@ -60,6 +60,7 @@ function ui._initDeck(deck)
         rects[deck].vol, 
         function () sys.volInc(deck) end, 
         function () sys.volDec(deck) end, 
+        function () sys.volTouch(deck) end,
         function () sys.volTouch(deck) end
     )
 
@@ -68,6 +69,7 @@ function ui._initDeck(deck)
         rects[deck].snd, 
         function () sys.sndInc(deck) end, 
         function () sys.sndDec(deck) end, 
+        function () sys.play(deck, track) end,
         function () sys.sndTouch(deck) end
     )
 
@@ -76,6 +78,7 @@ function ui._initDeck(deck)
         rects[deck].num, 
         function () sys.numInc(deck) end, 
         function () sys.numDec(deck) end, 
+        function () sys.numTouch(deck) end,
         function () sys.numTouch(deck) end
     )
 
@@ -84,6 +87,7 @@ function ui._initDeck(deck)
         rects[deck].rot, 
         function () sys.rotInc(deck) end, 
         function () sys.rotDec(deck) end, 
+        function () sys.rotTouch(deck) end,
         function () sys.rotTouch(deck) end
     )
 
@@ -92,6 +96,7 @@ function ui._initDeck(deck)
         rects[deck].len, 
         function () sys.lenInc(deck) end, 
         function () sys.lenDec(deck) end, 
+        function () sys.lenTouch(deck) end,
         function () sys.lenTouch(deck) end
     )
 
@@ -100,6 +105,7 @@ function ui._initDeck(deck)
         rects[deck].mem, 
         function () sys.memInc(deck) end, 
         function () sys.memDec(deck) end, 
+        function () sys.memTouch(deck) end,
         function () sys.memTouch(deck) end
     )
 
@@ -118,6 +124,7 @@ function ui.init()
         rects.bpm, 
         sys.bpmInc, 
         sys.bpmDec, 
+        sys.bpmTouch,
         sys.bpmTouch
     )
 

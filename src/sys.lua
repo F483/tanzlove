@@ -73,6 +73,17 @@ local sys = {
     },
 }
 
+function sys.play(deck, track)
+    local deck = deck or sys.display.deck
+    local track = track or sys.display.selected[deck]
+    local data = sys.getTrackData(track, deck)
+    local snd = sys.player.samples[deck][track][data.snd]
+    -- TODO also set according to fader
+    snd:setVolume(data.vol / sys.limits.vol.max) 
+    snd:stop()
+    snd:play()
+end
+
 function sys.init()
 
     -- load memomry slots
@@ -184,15 +195,7 @@ function sys.update(dt)
                 local total_progress = sys._getTotalProgress(deck)
                 local skip = total_progress - last_expected > 1.0 / len
                 if last_expected > last_played and not skip then
-
-                    -- play sound
-                    local snd = sys.player.samples[deck][track][data.snd]
-                    -- TODO also set according to vol and fader
-                    snd:setVolume(data.vol / sys.limits.vol.max) 
-                    snd:stop()
-                    snd:play()
-
-                    -- remember when sound played
+                    sys.play(deck, track)
                     sys.player.history[deck][track] = total_progress
                 end
             end
@@ -408,12 +411,6 @@ function sys.sndDisplay(deck)
         return filename:match("([^/]+).wav$")
     end
     return "SND"
-end
-
-function sys.play(deck, track)
-    local deck = deck or sys.display.deck
-    local track = track or sys.display.selected[deck]
-    sys.player.samples[deck][track]:play()
 end
 
 ---------
