@@ -178,9 +178,12 @@ function sys.update(dt)
         for track = 1, 4 do
             local data = sys.getTrackData(track, deck)
             if data.vol > 0 and data.num > 0 then
+                local len = sys.getLen(deck)
                 local last_played = sys.player.history[deck][track]
                 local last_expected = sys._getLastExpected(deck, track)
-                if last_expected > last_played then
+                local total_progress = sys._getTotalProgress(deck)
+                local skip = total_progress - last_expected > 1.0 / len
+                if last_expected > last_played and not skip then
 
                     -- play sound
                     local snd = sys.player.samples[deck][track][data.snd]
@@ -190,8 +193,7 @@ function sys.update(dt)
                     snd:play()
 
                     -- remember when sound played
-                    local current_progress = sys._getTotalProgress(deck)
-                    sys.player.history[deck][track] = current_progress
+                    sys.player.history[deck][track] = total_progress
                 end
             end
         end
@@ -208,7 +210,7 @@ function sys._getLastExpected(deck, track)
     local current_step_index = math.ceil(loop_progress * len)
 
     -- rotate until we find the last beat played
-    local expected = 0.0  -- FIXME nil if not found
+    local expected = - 2 / len -- always skipped
     for rot = 0, len - 1 do
         local index = ((current_step_index + 15 - rot) % len) + 1
         if rhythm[index] ~= 0 then
