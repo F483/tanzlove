@@ -176,12 +176,12 @@ function ui._drawTrackButtons(deck, t)
     -- mute track
     if sys.getSelectedTrack(deck) == t then
         color = colors.track[t].up_selected
-        if sys.player[deck].mute[t] then
+        if sys.player.setup[deck].mute[t] then
             color = colors.track[t].down_selected
         end
     else
         color = colors.track[t].up_inactive
-        if sys.player[deck].mute[t] then
+        if sys.player.setup[deck].mute[t] then
             color = colors.track[t].down_inactive
         end
     end
@@ -190,12 +190,12 @@ function ui._drawTrackButtons(deck, t)
     -- solo track
     if sys.getSelectedTrack(deck) == t then
         color = colors.track[t].up_selected
-        if sys.player[deck].solo == t then
+        if sys.player.setup[deck].solo == t then
             color = colors.track[t].down_selected
         end
     else -- inactive
         color = colors.track[t].up_inactive
-        if sys.player[deck].solo == t then
+        if sys.player.setup[deck].solo == t then
             color = colors.track[t].down_inactive
         end
     end
@@ -222,40 +222,40 @@ function ui.update(delta_time)
     end
 end
 
-function ui._drawDeck(deck)
+function ui._drawDeck(d)
 
     local selected_track = sys.getSelectedTrack()
     local track_color = colors.track[selected_track].up_selected
-    local deck_color = colors[deck].up_selected -- TODO handle not selected
+    local deck_color = colors[d].up_selected -- TODO handle not selected
 
-    local label = sys.volDisplay(deck)
-    ui._drawSelector(track_color, colors.eigengrau, label, rects[deck].vol) 
+    local label = sys.volDisplay(d)
+    ui._drawSelector(track_color, colors.eigengrau, label, rects[d].vol) 
     
-    label = sys.sndDisplay(deck)
-    ui._drawSelector(track_color, colors.eigengrau, label, rects[deck].snd) 
+    label = sys.sndDisplay(d)
+    ui._drawSelector(track_color, colors.eigengrau, label, rects[d].snd) 
     
-    label = sys.numDisplay(deck)
-    ui._drawSelector(track_color, colors.eigengrau, label, rects[deck].num) 
+    label = sys.numDisplay(d)
+    ui._drawSelector(track_color, colors.eigengrau, label, rects[d].num) 
 
-    label = sys.rotDisplay(deck)
-    ui._drawSelector(track_color, colors.eigengrau, label, rects[deck].rot) 
+    label = sys.rotDisplay(d)
+    ui._drawSelector(track_color, colors.eigengrau, label, rects[d].rot) 
     
-    label = sys.lenDisplay(deck)
-    ui._drawSelector(deck_color, colors.eigengrau, label, rects[deck].len) 
+    label = sys.lenDisplay(d)
+    ui._drawSelector(deck_color, colors.eigengrau, label, rects[d].len) 
     
-    label = sys.memDisplay(deck)
-    ui._drawSelector(deck_color, colors.eigengrau, label, rects[deck].mem) 
+    label = sys.memDisplay(d)
+    ui._drawSelector(deck_color, colors.eigengrau, label, rects[d].mem) 
 
     -- draw select
     local label = "L"
-    if deck == "right" then
+    if d == "right" then
         label = "R"
     end
-    local color = colors[deck].up_inactive
-    if deck == sys.getSelectedDeck() then
-        local color = colors[deck].down_selected
+    local color = colors[d].up_inactive
+    if d == sys.getSelectedDeck() then
+        local color = colors[d].down_selected
     end
-    ui._drawField(color, colors.eigengrau, label, rects[deck].select)
+    ui._drawField(color, colors.eigengrau, label, rects[d].select)
 end
 
 function ui.draw()
@@ -283,6 +283,7 @@ function ui.draw()
     -- TODO deck fader
 
     -- track orbits
+    local d = sys.getSelectedDeck()
     local x, y, outer_r, orbit_delta = util.camAdjust(rects.atom, ui.cam)
     for t = 1, 4 do
         local orbit_r = outer_r - ((t-1) * orbit_delta)
@@ -296,15 +297,23 @@ function ui.draw()
         love.graphics.circle("line", x, y, orbit_r, 64)
 
         -- draw orbit beat backgrounds
-        local len = sys.getLen()
-        for b = 0, len - 1 do
+        local len = sys.getLen(d)
+        local num = sys.getNum(d, t)
+        local rot = sys.getRot(d, t)
+        local rhythm = sys.getRhythm(len, num, rot)
+        for b = 1, len do
 
-            -- TODO account for track beats and when last played
+            -- TODO draw beats recently played
             
-            local fraction = math.pi * 2 * (b / len)
+            local fraction = math.pi * 2 * ((b - 1) / (len))
             local dx, dy = vector.rotate(fraction, 0.0, - orbit_r)
             local tx, ty = vector.add(x, y, dx, dy)
-            love.graphics.circle("fill", tx, ty, 1, 16)
+
+            local r = 1
+            if rhythm[b] ~= 0 then
+                r = 2
+            end
+            love.graphics.circle("fill", tx, ty, r, 16)
         end
     end
 

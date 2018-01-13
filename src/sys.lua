@@ -5,10 +5,10 @@ local SHOW_TIME = 1.0 -- seconds
 local DEFAULT_PATTERN = {
     len = 16,
     tracks = {
-        {vol = 15, snd = 0, num = 0, rot = 0},
-        {vol = 15, snd = 0, num = 0, rot = 0},
-        {vol = 15, snd = 0, num = 0, rot = 0},
-        {vol = 15, snd = 0, num = 0, rot = 0},
+        {vol = 15, snd = 1, num = 0, rot = 0},
+        {vol = 15, snd = 1, num = 0, rot = 0},
+        {vol = 15, snd = 1, num = 0, rot = 0},
+        {vol = 15, snd = 1, num = 0, rot = 0},
     }
 }
 
@@ -25,7 +25,7 @@ local sys = {
 
     limits = {
         vol = {min=0, max=15},
-        snd = {min=0, max=15},
+        snd = {min=1, max=16},
         num = {min=0, max=16},
         rot = {min=0, max=15},
         bpm = {min=1, max=255},
@@ -39,18 +39,23 @@ local sys = {
         bpm = 128,
         fade = 1.0, -- 0.0 = left, 1.0 = right
         samples = {},
+
+        -- TODO also save for which step it was ?
         history = {}, -- when the sample was last played for a given deck, track
-        left = {
-            clock = 0.0,
-            pattern = 1, -- memory index
-            solo = nil,
-            mute = {false, false, false, false, false, false, false, false},
-        },
-        right = {
-            clock = 0.0,
-            pattern = 1, -- memory index
-            solo = nil,
-            mute = {false, false, false, false, false, false, false, false},
+
+        setup = {
+            left = {
+                clock = 0.0, -- FIXME save total progress instead?
+                pattern = 1, -- memory index
+                solo = nil,
+                mute = {false, false, false, false, false, false, false, false},
+            },
+            right = {
+                clock = 0.0, -- FIXME save total progress instead?
+                pattern = 1, -- memory index
+                solo = nil,
+                mute = {false, false, false, false, false, false, false, false},
+            }
         }
     },
     
@@ -82,11 +87,10 @@ function sys.init()
         sys.player.history[deck] = {}
         for track = 1, 4 do
             sys.player.samples[deck][track] = {}
-            sys.player.history[deck][track] = {}
             for i, filename in ipairs(SAMPLES) do
                 local snd = love.audio.newSource(filename, "static")
                 table.insert(sys.player.samples[deck][track], snd)
-                table.insert(sys.player.history[deck][track], nil)
+                sys.player.history[deck][track] = -123456789.0
             end
         end
     end
@@ -101,22 +105,53 @@ end
 function sys.getLoopProgress(deck)
     local deck = deck or sys.display.deck
     local looplen = sys.getLoopLen(deck)
-    return (sys.player[deck].clock % looplen) / looplen
+    return (sys.player.setup[deck].clock % looplen) / looplen
 end
 
 function sys._getTotalProgress(deck)
-    return sys.player[deck].clock / sys.getLoopLen(deck)
+    return sys.player.setup[deck].clock / sys.getLoopLen(deck)
 end
 
 function sys._setTotalProgress(progress, deck)
-    sys.player[deck].clock = progress * sys.getLoopLen(deck)
+    sys.player.setup[deck].clock = progress * sys.getLoopLen(deck)
+end
+
+function sys.getRhythm(len, num, rot)
+    assert(len == 16, "only 16 beats implemented ...")
+
+    -- FIXME compute all lookups on startup, encluding rotation index
+    local lookup = {}
+    lookup[16] = {}
+    lookup[16][0] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+    lookup[16][1] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+    lookup[16][2] = {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}
+    lookup[16][3] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0}
+    lookup[16][4] = {1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0}
+    lookup[16][5] = {1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0}
+    lookup[16][6] = {1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0}
+    lookup[16][7] = {1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0}
+    lookup[16][8] = {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}
+    lookup[16][9] = {1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0}
+    lookup[16][10] = {1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1}
+    lookup[16][11] = {1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1}
+    lookup[16][12] = {1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0}
+    lookup[16][13] = {1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1}
+    lookup[16][14] = {1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0}
+    lookup[16][15] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0}
+    lookup[16][16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+    local result = {}
+    for step = 1, len do
+        local index = ((step + 15 - rot) % len) + 1
+        result[step] = lookup[len][num][index]
+    end
+    return result
 end
 
 function sys.update(dt)
 
     -- update deck clocks
-    sys.player.left.clock = sys.player.right.clock + dt
-    sys.player.right.clock = sys.player.right.clock + dt
+    sys.player.setup.left.clock = sys.player.setup.right.clock + dt
+    sys.player.setup.right.clock = sys.player.setup.right.clock + dt
 
     -- update ttls
     local ttls = sys.display.show_ttls
@@ -134,7 +169,24 @@ function sys.update(dt)
     ttls.right.num = math.max(0.0, ttls.right.num - dt)
     ttls.right.rot = math.max(0.0, ttls.right.rot - dt)
 
-    -- play samples 
+    -- play samples if needed
+    for i, deck in ipairs({"left", "right"}) do 
+        for track = 1, 4 do
+            local data = sys.getTrackData(track, deck)
+            if data.vol > 0 and data.num > 0 then
+                local last_played = sys.player.history[deck][track]
+                local last_expected = 0.0 -- FIXME get last expected play
+                if last_expected > last_played then
+                    
+                    local snd = sys.player.samples[deck][track][data.snd]
+                    snd:play()
+
+                    local current_progress = sys._getTotalProgress(deck)
+                    sys.player.history[deck][track] = current_progress
+                end
+            end
+        end
+    end
     
 end
 
@@ -217,17 +269,17 @@ end
 
 function sys.toggleSolo(track, deck)
     local deck = deck or sys.display.deck
-    if sys.player[deck].solo == track then
-        sys.player[deck].solo = nil
+    if sys.player.setup[deck].solo == track then
+        sys.player.setup[deck].solo = nil
     else
-        sys.player[deck].solo = track
+        sys.player.setup[deck].solo = track
     end
 end
 
 function sys.toggleMute(track, deck)
     local deck = deck or sys.display.deck
-    local current_value = sys.player[deck].mute[track]
-    sys.player[deck].mute[track] = not current_value
+    local current_value = sys.player.setup[deck].mute[track]
+    sys.player.setup[deck].mute[track] = not current_value
 end
 
 function sys.trackTouch(deck)
@@ -240,22 +292,22 @@ end
 
 function sys.getTrackData(index, deck)
     local deck = deck or sys.display.deck
-    local pattern_index = sys.player[deck].pattern
+    local pattern_index = sys.player.setup[deck].pattern
     return sys.memory[pattern_index].tracks[index]
 end
 
 function sys.getTrackVal(prop, deck, track)
     local deck = deck or sys.display.deck
-    local track = sys.display.selected[deck]
-    local pattern_index = sys.player[deck].pattern
+    local track = track or sys.display.selected[deck]
+    local pattern_index = sys.player.setup[deck].pattern
     local pattern = sys.memory[pattern_index]
     return pattern.tracks[track][prop]
 end
 
 function sys.setTrackVal(prop, value, deck, track)
     local deck = deck or sys.display.deck
-    local track = sys.display.selected[deck]
-    local pattern_index = sys.player[deck].pattern
+    local track = track or sys.display.selected[deck]
+    local pattern_index = sys.player.setup[deck].pattern
     local pattern = sys.memory[pattern_index]
     pattern.tracks[track][prop] = value
 end
@@ -319,7 +371,9 @@ end
 function sys.sndDisplay(deck)
     local deck = deck or sys.display.deck
     if sys.display.show_ttls[deck].snd > 0.0 then
-        return string.format("%03d", sys.getTrackVal("snd", deck))
+        local val = sys.getTrackVal("snd", deck)
+        local filename = SAMPLES[val]
+        return filename:match("([^/]+).wav$")
     end
     return "SND"
 end
@@ -355,6 +409,10 @@ function sys.numDisplay(deck)
     return "NUM"
 end
 
+function sys.getNum(deck, track)
+    return sys.getTrackVal("num", deck, track)
+end
+
 ---------
 -- ROT --
 ---------
@@ -380,6 +438,10 @@ function sys.rotDisplay(deck)
     return "ROT"
 end
 
+function sys.getRot(deck, track)
+    return sys.getTrackVal("rot", deck, track)
+end
+
 ---------
 -- LEN --
 ---------
@@ -387,7 +449,7 @@ end
 function sys.lenInc(deck) 
     local deck = deck or sys.display.deck
     local prev = sys._getTotalProgress(deck)
-    local pattern_index = sys.player[deck].pattern
+    local pattern_index = sys.player.setup[deck].pattern
     local val = sys.memory[pattern_index].len
     val = math.min(val + 1, sys.limits.len.max)
     sys.memory[pattern_index].len = val
@@ -398,7 +460,7 @@ end
 function sys.lenDec(deck) 
     local deck = deck or sys.display.deck
     local prev = sys._getTotalProgress(deck)
-    local pattern_index = sys.player[deck].pattern
+    local pattern_index = sys.player.setup[deck].pattern
     local val = sys.memory[pattern_index].len
     val = math.max(val - 1, sys.limits.len.min)
     sys.memory[pattern_index].len = val
@@ -414,7 +476,7 @@ end
 function sys.lenDisplay(deck) 
     local deck = deck or sys.display.deck
     if sys.display.show_ttls[deck].len > 0.0 then
-        local pattern_index = sys.player[deck].pattern
+        local pattern_index = sys.player.setup[deck].pattern
         return string.format("%03d", sys.memory[pattern_index].len)
     end
     return "LEN"
@@ -422,7 +484,7 @@ end
 
 function sys.getLen(deck)
     local deck = deck or sys.display.deck
-    local pattern_index = sys.player[deck].pattern
+    local pattern_index = sys.player.setup[deck].pattern
     return sys.memory[pattern_index].len
 end
 
@@ -433,9 +495,9 @@ end
 function sys.memInc(deck) 
     local deck = deck or sys.display.deck
     local prev = sys._getTotalProgress(deck)
-    local val = sys.player[deck].pattern
+    local val = sys.player.setup[deck].pattern
     val = math.min(val + 1, sys.limits.mem.max)
-    sys.player[deck].pattern = val
+    sys.player.setup[deck].pattern = val
     sys.deckTouch(deck)
     sys._setTotalProgress(prev, deck)
 end
@@ -443,9 +505,9 @@ end
 function sys.memDec(deck) 
     local deck = deck or sys.display.deck
     local prev = sys._getTotalProgress(deck)
-    local val = sys.player[deck].pattern
+    local val = sys.player.setup[deck].pattern
     val = math.max(val - 1, sys.limits.mem.min)
-    sys.player[deck].pattern = val
+    sys.player.setup[deck].pattern = val
     sys.deckTouch(deck)
     sys._setTotalProgress(prev, deck)
 end
@@ -458,7 +520,7 @@ end
 function sys.memDisplay(deck) 
     local deck = deck or sys.display.deck
     if sys.display.show_ttls[deck].mem > 0.0 then
-        local pattern_index = sys.player[deck].pattern
+        local pattern_index = sys.player.setup[deck].pattern
         return string.format("%03d", pattern_index)
     end
     return "MEM"
