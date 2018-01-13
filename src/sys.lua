@@ -52,7 +52,7 @@ local sys = {
             },
             right = {
                 clock = 0.0, -- FIXME save total progress instead?
-                pattern = 1, -- memory index
+                pattern = 2, -- memory index
                 solo = nil,
                 mute = {false, false, false, false, false, false, false, false},
             }
@@ -96,7 +96,7 @@ function sys.init()
     end
 end
 
-function sys.getLoopLen(deck)
+function sys._getLoopLen(deck)
     local deck = deck or sys.display.deck
     local factor = sys.getLen(deck) / sys.limits.len.max
     return (60.0 / sys.player.bpm) * 4 * factor
@@ -104,19 +104,23 @@ end
 
 function sys.getLoopProgress(deck)
     local deck = deck or sys.display.deck
-    local looplen = sys.getLoopLen(deck)
-    return (sys.player.setup[deck].clock % looplen) / looplen
+    return sys._getTotalProgress(deck) % 1
 end
 
 function sys._getTotalProgress(deck)
-    return sys.player.setup[deck].clock / sys.getLoopLen(deck)
+    return sys.player.setup[deck].clock / sys._getLoopLen(deck)
 end
 
 function sys._setTotalProgress(progress, deck)
-    sys.player.setup[deck].clock = progress * sys.getLoopLen(deck)
+    sys.player.setup[deck].clock = progress * sys._getLoopLen(deck)
 end
 
-function sys.getRhythm(len, num, rot)
+function sys.getRhythm(d, t)
+    local len = sys.getLen(d)
+    local num = sys.getNum(d, t)
+    local rot = sys.getRot(d, t)
+
+
     assert(len == 16, "only 16 beats implemented ...")
 
     -- FIXME compute all lookups on startup, encluding rotation index
@@ -175,12 +179,17 @@ function sys.update(dt)
             local data = sys.getTrackData(track, deck)
             if data.vol > 0 and data.num > 0 then
                 local last_played = sys.player.history[deck][track]
-                local last_expected = 0.0 -- FIXME get last expected play
+                local last_expected = sys._getLastExpected(deck, track)
                 if last_expected > last_played then
-                    
+
+                    -- play sound
                     local snd = sys.player.samples[deck][track][data.snd]
+                    -- TODO also set according to vol and fader
+                    snd:setVolume(data.vol / sys.limits.vol.max) 
+                    snd:stop()
                     snd:play()
 
+                    -- remember when sound played
                     local current_progress = sys._getTotalProgress(deck)
                     sys.player.history[deck][track] = current_progress
                 end
@@ -189,6 +198,27 @@ function sys.update(dt)
     end
     
 end
+
+function sys._getLastExpected(deck, track)
+
+    local len = sys.getLen(deck)
+    local rhythm = sys.getRhythm(deck, track)
+    local total_progress = sys._getTotalProgress(deck)
+    local loop_progress = sys.getLoopProgress()
+    local current_step_index = math.ceil(loop_progress * len)
+
+    -- rotate until we find the last beat played
+    local expected = 0.0  -- FIXME nil if not found
+    for rot = 0, len - 1 do
+        local index = ((current_step_index + 15 - rot) % len) + 1
+        if rhythm[index] ~= 0 then
+            local step_remainder = total_progress % (1.0 / len)
+            return total_progress - rot / len - step_remainder
+        end
+    end
+    return expected
+end
+
 
 ---------
 -- BPM --

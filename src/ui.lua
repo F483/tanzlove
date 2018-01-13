@@ -298,9 +298,7 @@ function ui.draw()
 
         -- draw orbit beat backgrounds
         local len = sys.getLen(d)
-        local num = sys.getNum(d, t)
-        local rot = sys.getRot(d, t)
-        local rhythm = sys.getRhythm(len, num, rot)
+        local rhythm = sys.getRhythm(d, t)
         for b = 1, len do
 
             -- TODO draw beats recently played
