@@ -188,7 +188,8 @@ function sys.update(dt)
     for i, deck in ipairs({"left", "right"}) do 
         for track = 1, sys.limits.tracks do
             local data = sys.getTrackData(track, deck)
-            if data.vol > 0 and data.num > 0 then
+            local muted = sys.player.setup[deck].mute[track]
+            if data.vol > 0 and data.num > 0 and not muted then
                 local len = sys.getLen(deck)
                 local last_played = sys.player.history[deck][track]
                 local last_expected = sys._getLastExpected(deck, track)
