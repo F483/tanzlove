@@ -535,20 +535,30 @@ function sys.memInc(deck)
     local deck = deck or sys.display.deck
     local prev = sys._getTotalProgress(deck)
     local val = sys.player.setup[deck].pattern
-    val = math.min(val + 1, sys.limits.mem.max)
+    local max = sys.limits.mem.max
+    if val == max then
+        val = sys.limits.mem.min -- wrap around
+    else
+        val = math.min(val + 1, max)
+    end
     sys.player.setup[deck].pattern = val
-    sys.deckTouch(deck)
     sys._setTotalProgress(prev, deck)
+    sys.deckTouch(deck)
 end
 
 function sys.memDec(deck) 
     local deck = deck or sys.display.deck
     local prev = sys._getTotalProgress(deck)
     local val = sys.player.setup[deck].pattern
-    val = math.max(val - 1, sys.limits.mem.min)
+    local min = sys.limits.mem.min
+    if val == min then
+        val = sys.limits.mem.max -- wrap around
+    else
+        val = math.max(val - 1, min)
+    end
     sys.player.setup[deck].pattern = val
-    sys.deckTouch(deck)
     sys._setTotalProgress(prev, deck)
+    sys.deckTouch(deck)
 end
 
 function sys.memTouch(deck) 
