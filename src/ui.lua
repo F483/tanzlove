@@ -33,7 +33,7 @@ end
 function ui._initDeck(deck)
 
     -- track buttons
-    for t = 1, 4 do
+    for t = 1, sys.limits.tracks do
 
         -- select
         table.insert(ui.buttons, Button(
@@ -279,7 +279,7 @@ function ui.draw()
                      sys.bpmDisplay(), rects.bpm)
 
     -- track buttons
-    for t = 1, 4 do
+    for t = 1, sys.limits.tracks do
         ui._drawTrackButtons("left", t)
         ui._drawTrackButtons("right", t)
     end
@@ -292,7 +292,7 @@ function ui.draw()
     -- track orbits
     local d = sys.getSelectedDeck()
     local x, y, outer_r, orbit_delta = util.camAdjust(rects.atom, ui.cam)
-    for t = 1, 4 do
+    for t = 1, sys.limits.tracks do
         local orbit_r = outer_r - ((t-1) * orbit_delta)
         local rot_rs = outer_r - ((t-1) * orbit_delta) - orbit_delta / 2
         local rot_rf = outer_r - ((t-1) * orbit_delta) + orbit_delta / 2

@@ -30,7 +30,8 @@ local sys = {
         rot = {min=0, max=15},
         bpm = {min=1, max=255},
         len = {min=1, max=16},
-        mem = {min=1, max=128}
+        mem = {min=1, max=128},
+        tracks = 4
     },
 
     memory = {},
@@ -96,7 +97,7 @@ function sys.init()
     for i, deck in ipairs({"left", "right"}) do 
         sys.player.samples[deck] = {}
         sys.player.history[deck] = {}
-        for track = 1, 4 do
+        for track = 1, sys.limits.tracks do
             sys.player.samples[deck][track] = {}
             for i, filename in ipairs(SAMPLES) do
                 local snd = love.audio.newSource(filename, "static")
@@ -185,7 +186,7 @@ function sys.update(dt)
 
     -- play samples if needed
     for i, deck in ipairs({"left", "right"}) do 
-        for track = 1, 4 do
+        for track = 1, sys.limits.tracks do
             local data = sys.getTrackData(track, deck)
             if data.vol > 0 and data.num > 0 then
                 local len = sys.getLen(deck)
@@ -348,14 +349,24 @@ end
 
 function sys.incTrackVal(prop, deck, track)
     local val = sys.getTrackVal(prop, deck, track)
-    val = math.min(val + 1, sys.limits[prop].max)
+    local max = sys.limits[prop].max
+    if val == max then
+        val = sys.limits[prop].min -- wrap around
+    else
+        val = math.min(val + 1, max)
+    end
     sys.setTrackVal(prop, val, deck, track)
     sys.display.show_ttls[deck][prop] = SHOW_TIME
 end
 
 function sys.decTrackVal(prop, deck, track)
     local val = sys.getTrackVal(prop, deck, track)
-    val = math.max(val - 1, sys.limits[prop].min)
+    local min = sys.limits[prop].min
+    if val == min then
+        val = sys.limits[prop].max -- wrap around
+    else
+        val = math.max(val - 1, min)
+    end
     sys.setTrackVal(prop, val, deck, track)
     sys.display.show_ttls[deck][prop] = SHOW_TIME
 end
