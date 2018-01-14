@@ -189,7 +189,10 @@ function sys.update(dt)
         for track = 1, sys.limits.tracks do
             local data = sys.getTrackData(track, deck)
             local muted = sys.player.setup[deck].mute[track]
-            if data.vol > 0 and data.num > 0 and not muted then
+            local solo = sys.player.setup[deck].solo
+            local other_solo = solo ~= nil and solo ~= track
+            local audable = not muted and not other_solo
+            if audable and data.vol > 0 and data.num > 0 then
                 local len = sys.getLen(deck)
                 local last_played = sys.player.history[deck][track]
                 local last_expected = sys._getLastExpected(deck, track)
