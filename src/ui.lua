@@ -23,7 +23,8 @@ local ui = {
 function ui._addSelectorButtons(rect, onInc, onDec, onPress, onOver)
     local x, y, w, h = unpack(rect)
     local dec = Button({x, y, 8, 8}, ui.cam, onDec)
-    local show = Button({x + 8, y, 24, 8}, ui.cam, onPress, onOver, false, false)
+    local show = Button({x + 8, y, 24, 8}, ui.cam, onPress,
+                        onOver, false, false)
     local inc = Button({x + 8 + 24, y, 8, 8}, ui.cam, onInc)
     table.insert(ui.buttons, inc)
     table.insert(ui.buttons, dec)
@@ -227,6 +228,14 @@ function ui.update(delta_time)
     for i, button in ipairs(ui.buttons) do
         button:update(delta_time)
     end
+
+    -- update fader
+    local mx, my = unpack(gfx.fromWinPos({love.mouse.getPosition()}))
+    local over_fader = util.overRect(mx, my, rects.fader, ui.cam)
+    if over_fader and love.mouse.isDown(1) then
+        local x, y, w, h = util.camAdjust(rects.fader, ui.cam)
+        sys.player.fade = (mx - x) / w
+    end
 end
 
 function ui._drawDeck(d)
@@ -287,7 +296,17 @@ function ui.draw()
     ui._drawDeck("left")
     ui._drawDeck("right")
 
-    -- TODO deck fader
+    -- deck fader
+    local lf = 1.0 - sys.player.fade
+    local rf = sys.player.fade
+    local lr, lg, lb = unpack(colors.left.up_selected)
+    local rr, rg, rb = unpack(colors.right.up_selected)
+    local r, g, b = lr*lf + rr*rf, lg*lf + rg*rf, lb*lf + rb*rf
+    local x, y, w, h = util.camAdjust(rects.fader, ui.cam)
+    love.graphics.setColor(r, g, b) 
+    love.graphics.rectangle("fill", x, y, w, h)
+    love.graphics.setColor(255 - r, 255 - g, 255 - b) 
+    love.graphics.line(x + w * rf, y - 1.0, x + w * rf, y + 9.0)
 
     -- track orbits
     local d = sys.getSelectedDeck()

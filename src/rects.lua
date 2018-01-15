@@ -3,6 +3,7 @@ return {
     atom = {118, 50, 34, 6}, -- x, y, radius, delta
     exit = {4, 4, 40, 8},
     bpm = {192, 4, 40, 8},
+    fader = {92, 88, 52, 8},
     left = {
         select = {80, 88, 8, 8},
         vol = {4, 4 + 12 * 2, 40, 8},

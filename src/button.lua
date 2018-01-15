@@ -17,8 +17,7 @@ function Button:init(rect, cam, onPress, onOver, drawPress, drawOver)
 end
 
 function Button:_overButton(x, y)
-    local bx, by, bw, bh = util.camAdjust(self.rect, self.cam)
-    return x >= bx and x < bx + bw and y >= by and y < by + bh 
+    return util.overRect(x, y, self.rect, self.cam)
 end
 
 function Button:mousepressed(x, y, button, istouch)

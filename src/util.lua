@@ -9,6 +9,11 @@ function util.camAdjust(rect, cam)
     return rx - cx, ry - cy, rw, rh
 end
 
+function util.overRect(x, y, rect, cam)
+    local bx, by, bw, bh = util.camAdjust(rect, cam)
+    return x >= bx and x < bx + bw and y >= by and y < by + bh 
+end
+
 function util.loadJsonFile(filepath)
     local rawdata, size = love.filesystem.read(filepath)
     assert(size, "Couldn't read from file: " .. filepath)

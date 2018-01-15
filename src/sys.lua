@@ -16,7 +16,7 @@ local SAMPLES = {
     "snd/BDL.wav", "snd/BDS.wav", "snd/CLP.wav", "snd/CLV.wav",
     "snd/CNG.wav", "snd/COW.wav", "snd/CYM.wav", "snd/HHC.wav",
     "snd/HHO.wav", "snd/HHP.wav", "snd/SD1.wav", "snd/SD2.wav",
-    "snd/SHK.wav", "snd/TMH.wav", "snd/TML.wav", "snd/TMM.wav",
+    "snd/SHK.wav", "snd/TML.wav", "snd/TMM.wav", "snd/TMH.wav",
 }
 
 local sys = {
@@ -74,13 +74,13 @@ local sys = {
     },
 }
 
-function sys.play(deck, track)
+function sys.play(deck, track, vol)
     local deck = deck or sys.display.deck
     local track = track or sys.display.selected[deck]
     local data = sys.getTrackData(track, deck)
     local snd = sys.player.samples[deck][track][data.snd]
-    -- TODO also set according to fader
-    snd:setVolume(data.vol / sys.limits.vol.max) 
+    vol = vol or data.vol
+    snd:setVolume(vol / sys.limits.vol.max) 
     snd:stop()
     snd:play()
 end
@@ -192,14 +192,18 @@ function sys.update(dt)
             local solo = sys.player.setup[deck].solo
             local other_solo = solo ~= nil and solo ~= track
             local audable = not muted and not other_solo
-            if audable and data.vol > 0 and data.num > 0 then
+            local vol = data.vol * sys.player.fade
+            if deck == "left" then
+                vol = data.vol * (1.0 - sys.player.fade)
+            end
+            if audable and vol > 0.0 and data.num > 0 then
                 local len = sys.getLen(deck)
                 local last_played = sys.player.history[deck][track]
                 local last_expected = sys._getLastExpected(deck, track)
                 local total_progress = sys._getTotalProgress(deck)
                 local skip = total_progress - last_expected > 1.0 / len
                 if last_expected > last_played and not skip then
-                    sys.play(deck, track)
+                    sys.play(deck, track, vol)
                     sys.player.history[deck][track] = total_progress
                 end
             end
