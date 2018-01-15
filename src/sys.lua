@@ -468,7 +468,12 @@ function sys.lenInc(deck)
     local prev = sys._getTotalProgress(deck)
     local pattern_index = sys.player.setup[deck].pattern
     local val = sys.memory[pattern_index].len
-    val = math.min(val + 1, sys.limits.len.max)
+    local max = sys.limits.len.max
+    if val == max then
+        val = sys.limits.len.min -- wrap around
+    else
+        val = math.min(val + 1, max)
+    end
     sys.memory[pattern_index].len = val
     sys.lenTouch(deck)
     sys._setTotalProgress(prev, deck)
@@ -479,7 +484,12 @@ function sys.lenDec(deck)
     local prev = sys._getTotalProgress(deck)
     local pattern_index = sys.player.setup[deck].pattern
     local val = sys.memory[pattern_index].len
-    val = math.max(val - 1, sys.limits.len.min)
+    local min = sys.limits.len.min
+    if val == min then
+        val = sys.limits.len.max -- wrap around
+    else
+        val = math.max(val - 1, min)
+    end
     sys.memory[pattern_index].len = val
     sys.lenTouch(deck)
     sys._setTotalProgress(prev, deck)

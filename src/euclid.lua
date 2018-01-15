@@ -54,8 +54,7 @@ function euclid._generate(len, num, rot)
 
     -- order
     while true do
-        -- euclid._print(pattern)
-
+        
         -- merged as far as possible
         if #pattern <= 2 then
             rhythm = euclid._merge(unpack(pattern))
@@ -132,9 +131,5 @@ end
 function euclid.rhythm(len, num, rot)
     return euclid.lookup[len][num][rot]
 end
-
-print(euclid.init())
--- print(unpack(euclid._generate(15, 12, 0)))
--- print(unpack(euclid._merge(euclid._generate(16, 6, 0))))
 
 return euclid
