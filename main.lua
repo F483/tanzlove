@@ -1,5 +1,6 @@
 local sys = require("src.sys")
 local gfx = require("src.gfx")
+local euclid = require("src.euclid")
 local ui = require("src.ui")
 
 function love.mousepressed(x, y, button, istouch)
@@ -14,6 +15,7 @@ function love.load()
     gfx.init()
     ui.init()
     sys.init()
+    euclid.init()
     -- TODO load samples and loops
 end
 

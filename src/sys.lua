@@ -1,4 +1,5 @@
 local util = require("src.util")
+local euclid = require("src.euclid")
 
 local SHOW_TIME = 1.0 -- seconds
 
@@ -21,8 +22,6 @@ local SAMPLES = {
 
 local sys = {
 
-    -- TODO move to player
-
     limits = {
         vol = {min=0, max=15},
         snd = {min=1, max=16},
@@ -41,7 +40,6 @@ local sys = {
         fade = 1.0, -- 0.0 = left, 1.0 = right
         samples = {},
 
-        -- TODO also save for which step it was ?
         history = {}, -- when the sample was last played for a given deck, track
 
         setup = {
@@ -129,37 +127,9 @@ end
 
 function sys.getRhythm(d, t)
     local len = sys.getLen(d)
-    local num = sys.getNum(d, t)
-    local rot = sys.getRot(d, t)
-
-    assert(len == 16, "only 16 beats implemented ...")
-
-    -- FIXME compute all lookups on startup, encluding rotation index
-    local lookup = {}
-    lookup[16] = {}
-    lookup[16][0] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-    lookup[16][1] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-    lookup[16][2] = {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}
-    lookup[16][3] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0}
-    lookup[16][4] = {1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0}
-    lookup[16][5] = {1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0}
-    lookup[16][6] = {1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0}
-    lookup[16][7] = {1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0}
-    lookup[16][8] = {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}
-    lookup[16][9] = {1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0}
-    lookup[16][10] = {1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1}
-    lookup[16][11] = {1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1}
-    lookup[16][12] = {1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0}
-    lookup[16][13] = {1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1}
-    lookup[16][14] = {1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0}
-    lookup[16][15] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0}
-    lookup[16][16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-    local result = {}
-    for step = 1, len do
-        local index = ((step + 15 - rot) % len) + 1
-        result[step] = lookup[len][num][index]
-    end
-    return result
+    local num = math.min(sys.getNum(d, t), len)
+    local rot = sys.getRot(d, t) % len
+    return euclid.rhythm(len, num, rot)
 end
 
 function sys.update(dt)
