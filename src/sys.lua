@@ -85,9 +85,8 @@ end
 
 function sys.init()
 
-    -- load memomry slots
+    -- FIXME load memomry slots from default/file
     for m = sys.limits.mem.min, sys.limits.mem.max do
-        -- TODO check and load if saved
         sys.memory[m] = util.deepCopy(DEFAULT_PATTERN)
     end
 

@@ -1,30 +1,24 @@
+local Gamestate = require("lib.hump.gamestate")
 local sys = require("src.sys")
 local gfx = require("src.gfx")
 local euclid = require("src.euclid")
-local ui = require("src.ui")
-
-function love.mousepressed(x, y, button, istouch)
-    ui.mousepressed(x, y, button, istouch)
-end
-
-function love.keypressed(key)
-    ui.keypressed(key)
-end
+local Studio = require("src.states.studio")
 
 function love.load()
     gfx.init()
-    ui.init()
+    -- board.init()
     sys.init()
     euclid.init()
-    -- TODO load samples and loops
+    Gamestate.registerEvents()
+    Gamestate.switch(Studio)
 end
 
 function love.draw()
     gfx.scale()
-    ui.draw()
+    -- board.draw()
 end
 
 function love.update(delta_time)
     sys.update(delta_time)
-    ui.update(delta_time)
+    -- board.update(delta_time)
 end
