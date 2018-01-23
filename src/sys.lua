@@ -13,6 +13,8 @@ local DEFAULT_PATTERN = {
     }
 }
 
+local MEM_DIR = "mem"
+
 local SAMPLES = {
     "snd/BDL.wav", "snd/BDS.wav", "snd/CLP.wav", "snd/CLV.wav",
     "snd/CNG.wav", "snd/COW.wav", "snd/CYM.wav", "snd/HHC.wav",
@@ -21,6 +23,8 @@ local SAMPLES = {
 }
 
 local sys = {
+
+    stopped = true,
 
     limits = {
         vol = {min=0, max=15},
@@ -36,21 +40,26 @@ local sys = {
     memory = {},
 
     player = { 
-        bpm = 128,
-        fade = 1.0, -- 0.0 = left, 1.0 = right
+
         samples = {},
 
         history = {}, -- when the sample was last played for a given deck, track
 
+        clock = {
+            left = 0.0, -- FIXME save total progress instead?
+            right = 0.0,
+        },
+
         setup = {
+            bpm = 128,
+            fade = 1.0, -- 0.0 = left, 1.0 = right
+
             left = {
-                clock = 0.0, -- FIXME save total progress instead?
                 pattern = 1, -- memory index
                 solo = nil,
                 mute = {false, false, false, false, false, false, false, false},
             },
             right = {
-                clock = 0.0, -- FIXME save total progress instead?
                 pattern = 2, -- memory index
                 solo = nil,
                 mute = {false, false, false, false, false, false, false, false},
@@ -72,6 +81,16 @@ local sys = {
     },
 }
 
+function sys.stop()
+    sys.stopped = true
+
+    -- TODO stop all current sounds
+end
+
+function sys.start()
+    sys.stopped = false
+end
+
 function sys.play(deck, track, vol)
     local deck = deck or sys.display.deck
     local track = track or sys.display.selected[deck]
@@ -85,11 +104,29 @@ end
 
 function sys.init()
 
-    -- FIXME load memomry slots from default/file
+	-- load mem
     for m = sys.limits.mem.min, sys.limits.mem.max do
-        sys.memory[m] = util.deepCopy(DEFAULT_PATTERN)
+        local filepath = MEM_DIR .. "/" .. m .. ".json"
+        if love.filesystem.exists(filepath) then
+            sys.memory[m] = util.loadJsonFile(filepath)
+        else
+            sys.memory[m] = util.deepCopy(DEFAULT_PATTERN)
+        end
     end
 
+	-- load player
+    local filepath = "player.json"
+    if love.filesystem.exists(filepath) then
+        sys.player.setup = util.loadJsonFile(filepath)
+    end
+
+	-- load display
+    local filepath = "display.json"
+    if love.filesystem.exists(filepath) then
+        sys.display = util.loadJsonFile(filepath)
+    end
+
+	-- load samples
     -- every track has its own sample bank to allow parallel play
     for i, deck in ipairs({"left", "right"}) do 
         sys.player.samples[deck] = {}
@@ -103,12 +140,30 @@ function sys.init()
             end
         end
     end
+
+end
+
+function sys.quit()
+
+	-- save mem
+    local success = love.filesystem.createDirectory(MEM_DIR)
+    for m = sys.limits.mem.min, sys.limits.mem.max do
+        local filepath = MEM_DIR .. "/" .. m .. ".json"
+		util.saveJsonFile(filepath, sys.memory[m])
+    end
+
+	-- save player
+    util.saveJsonFile("player.json", sys.player.setup)
+
+	-- save display
+    util.saveJsonFile("display.json", sys.display)
+
 end
 
 function sys._getLoopLen(deck)
     local deck = deck or sys.display.deck
     local factor = sys.getLen(deck) / sys.limits.len.max
-    return (60.0 / sys.player.bpm) * 4 * factor
+    return (60.0 / sys.player.setup.bpm) * 4 * factor
 end
 
 function sys.getLoopProgress(deck)
@@ -117,11 +172,11 @@ function sys.getLoopProgress(deck)
 end
 
 function sys._getTotalProgress(deck)
-    return sys.player.setup[deck].clock / sys._getLoopLen(deck)
+    return sys.player.clock[deck] / sys._getLoopLen(deck)
 end
 
 function sys._setTotalProgress(progress, deck)
-    sys.player.setup[deck].clock = progress * sys._getLoopLen(deck)
+    sys.player.clock[deck] = progress * sys._getLoopLen(deck)
 end
 
 function sys.getRhythm(d, t)
@@ -133,9 +188,14 @@ end
 
 function sys.update(dt)
 
+    -- do nothing if stopped
+    if sys.stopped == true then
+        return
+    end
+
     -- update deck clocks
-    sys.player.setup.left.clock = sys.player.setup.right.clock + dt
-    sys.player.setup.right.clock = sys.player.setup.right.clock + dt
+    sys.player.clock.left = sys.player.clock.right + dt
+    sys.player.clock.right = sys.player.clock.right + dt
 
     -- update ttls
     local ttls = sys.display.show_ttls
@@ -161,9 +221,9 @@ function sys.update(dt)
             local solo = sys.player.setup[deck].solo
             local other_solo = solo ~= nil and solo ~= track
             local audable = not muted and not other_solo
-            local vol = data.vol * sys.player.fade
+            local vol = data.vol * sys.player.setup.fade
             if deck == "left" then
-                vol = data.vol * (1.0 - sys.player.fade)
+                vol = data.vol * (1.0 - sys.player.setup.fade)
             end
             if audable and vol > 0.0 and data.num > 0 then
                 local len = sys.getLen(deck)
@@ -210,8 +270,8 @@ function sys.bpmInc()
     local prev_left = sys._getTotalProgress("left")
     local prev_right = sys._getTotalProgress("right")
 
-    local val = sys.player.bpm
-    sys.player.bpm = math.min(val + 1, sys.limits.bpm.max)
+    local val = sys.player.setup.bpm
+    sys.player.setup.bpm = math.min(val + 1, sys.limits.bpm.max)
     sys.bpmTouch()
 
     sys._setTotalProgress(prev_left, "left")
@@ -222,8 +282,8 @@ function sys.bpmDec()
     local prev_left = sys._getTotalProgress("left")
     local prev_right = sys._getTotalProgress("right")
 
-    local val = sys.player.bpm
-    sys.player.bpm = math.max(val - 1, sys.limits.bpm.min)
+    local val = sys.player.setup.bpm
+    sys.player.setup.bpm = math.max(val - 1, sys.limits.bpm.min)
     sys.bpmTouch()
 
     sys._setTotalProgress(prev_left, "left")
@@ -236,7 +296,7 @@ end
 
 function sys.bpmDisplay()
     if sys.display.show_ttls.bpm > 0.0 then
-        return string.format("%03d", sys.player.bpm)
+        return string.format("%03d", sys.player.setup.bpm)
     end
     return "BPM"
 end

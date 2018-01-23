@@ -22,3 +22,8 @@ function love.update(delta_time)
     sys.update(delta_time)
     -- board.update(delta_time)
 end
+
+function love.quit()
+	sys.quit()
+    return true
+end

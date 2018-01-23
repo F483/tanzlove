@@ -114,6 +114,10 @@ function Board:_initDeck(deck)
 
 end
 
+function Board.enter(previous)
+    sys.start()
+end
+
 function Board:init()
 
     -- bpm button
@@ -232,7 +236,7 @@ function Board:update(delta_time)
     local over_fader = util.overRect(mx, my, rects.fader, self.cam)
     if over_fader and love.mouse.isDown(1) then
         local x, y, w, h = util.camAdjust(rects.fader, self.cam)
-        sys.player.fade = (mx - x) / w
+        sys.player.setup.fade = (mx - x) / w
     end
 end
 
@@ -295,8 +299,8 @@ function Board:draw()
     self:_drawDeck("right")
 
     -- deck fader
-    local lf = 1.0 - sys.player.fade
-    local rf = sys.player.fade
+    local lf = 1.0 - sys.player.setup.fade
+    local rf = sys.player.setup.fade
     local lr, lg, lb = unpack(colors.left.up_selected)
     local rr, rg, rb = unpack(colors.right.up_selected)
     local r, g, b = lr*lf + rr*rf, lg*lf + rg*rf, lb*lf + rb*rf
