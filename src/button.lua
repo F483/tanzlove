@@ -43,10 +43,10 @@ function Button:draw()
     local mouse_down = love.mouse.isDown(1)
     if mouse_over and mouse_down and self.drawPress then
         love.graphics.setColor(unpack(COLOR_MOUSE_DOWN))
-        love.graphics.rectangle("fill", util.camAdjust(self.rect, self.cam))
+        love.graphics.rectangle("fill", util.camAdjustRect(self.rect, self.cam))
     elseif mouse_over and not mouse_down and self.drawOver then
         love.graphics.setColor(unpack(COLOR_MOUSE_OVER))
-        love.graphics.rectangle("fill", util.camAdjust(self.rect, self.cam))
+        love.graphics.rectangle("fill", util.camAdjustRect(self.rect, self.cam))
     end
 end
 

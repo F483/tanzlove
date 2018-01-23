@@ -3,6 +3,7 @@ local vector = require("lib.hump.vector-light")
 local util = require("src.util")
 local sys = require("src.sys")
 local colors = require("src.colors")
+local lines = require("src.lines")
 local rects = require("src.rects")
 local Button = require("src.button")
 
@@ -157,7 +158,7 @@ function Board:keypressed(key)
 end
 
 function Board:_drawField(fill_color, text_color, text, rect)
-    local x, y, w, h = util.camAdjust(rect, self.cam)
+    local x, y, w, h = util.camAdjustRect(rect, self.cam)
     love.graphics.setColor(unpack(fill_color))
     love.graphics.rectangle("fill", x, y, w, h)
     love.graphics.setColor(unpack(text_color))
@@ -165,7 +166,7 @@ function Board:_drawField(fill_color, text_color, text, rect)
 end
 
 function Board:_drawSelector(fill_color, text_color, text, rect)
-    local x, y, w, h = util.camAdjust(rect, self.cam)
+    local x, y, w, h = util.camAdjustRect(rect, self.cam)
     love.graphics.setColor(unpack(fill_color))
     love.graphics.rectangle("fill", x, y, w, h)
     love.graphics.setColor(unpack(text_color))
@@ -235,7 +236,7 @@ function Board:update(delta_time)
     local mx, my = unpack(gfx.fromWinPos({love.mouse.getPosition()}))
     local over_fader = util.overRect(mx, my, rects.fader, self.cam)
     if over_fader and love.mouse.isDown(1) then
-        local x, y, w, h = util.camAdjust(rects.fader, self.cam)
+        local x, y, w, h = util.camAdjustRect(rects.fader, self.cam)
         sys.player.setup.fade = (mx - x) / w
     end
 end
@@ -282,12 +283,23 @@ function Board:draw()
     love.graphics.setColor(unpack(colors.eigengrau))
     love.graphics.rectangle("fill", 0, 0, gfx.width, gfx.height)
 
+    -- draw background lines
+    local track = sys.getSelectedTrack()
+    local deck = sys.getSelectedDeck()
+    for i, line in ipairs(lines[deck][track]) do
+        local point_a, point_b = unpack(line)
+        local ax, ay = util.camAdjustPos(point_a, self.cam)
+        local bx, by = util.camAdjustPos(point_b, self.cam)
+        love.graphics.setColor(unpack(colors.track[track].up_selected))
+        love.graphics.line(ax, ay, bx, by)
+    end
+
     self:_drawField(colors.eigengrau, colors.white, "TANZBOY.IO", rects.logo)
     self:_drawField(colors.eigengrau, colors.white, "EXIT#", rects.exit)
 
     -- bmp
     self:_drawSelector(colors.eigengrau, colors.white,
-                     sys.bpmDisplay(), rects.bpm)
+                       sys.bpmDisplay(), rects.bpm)
 
     -- track buttons
     for t = 1, sys.limits.tracks do
@@ -304,7 +316,7 @@ function Board:draw()
     local lr, lg, lb = unpack(colors.left.up_selected)
     local rr, rg, rb = unpack(colors.right.up_selected)
     local r, g, b = lr*lf + rr*rf, lg*lf + rg*rf, lb*lf + rb*rf
-    local x, y, w, h = util.camAdjust(rects.fader, self.cam)
+    local x, y, w, h = util.camAdjustRect(rects.fader, self.cam)
     love.graphics.setColor(r, g, b) 
     love.graphics.rectangle("fill", x, y, w, h)
     love.graphics.setColor(255 - r, 255 - g, 255 - b) 
@@ -312,7 +324,7 @@ function Board:draw()
 
     -- track orbits
     local d = sys.getSelectedDeck()
-    local x, y, outer_r, orbit_delta = util.camAdjust(rects.atom, self.cam)
+    local x, y, outer_r, orbit_delta = util.camAdjustRect(rects.atom, self.cam)
     for t = 1, sys.limits.tracks do
         local orbit_r = outer_r - ((t-1) * orbit_delta)
         local rot_rs = outer_r - ((t-1) * orbit_delta) - orbit_delta / 2

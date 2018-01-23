@@ -3,14 +3,20 @@ local json = require("lib.json")
 
 local util = {}
 
-function util.camAdjust(rect, cam)
+function util.camAdjustPos(pos, cam)
+    local px, py = unpack(pos)
+    local cx, cy = unpack(cam)
+    return px - cx, py - cy
+end
+
+function util.camAdjustRect(rect, cam)
     local rx, ry, rw, rh = unpack(rect)
     local cx, cy = unpack(cam)
     return rx - cx, ry - cy, rw, rh
 end
 
 function util.overRect(x, y, rect, cam)
-    local bx, by, bw, bh = util.camAdjust(rect, cam)
+    local bx, by, bw, bh = util.camAdjustRect(rect, cam)
     return x >= bx and x < bx + bw and y >= by and y < by + bh 
 end
 
