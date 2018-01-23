@@ -71,7 +71,7 @@ local sys = {
         deck = "right", -- or left
         selected = {
             left = 1,
-            right = 2
+            right = 1
         },
         show_ttls = {
             bpm = 0.0,
@@ -141,16 +141,12 @@ function sys.init()
         end
     end
 
+    -- touch mem dir to enable saving
+    local success = love.filesystem.createDirectory(MEM_DIR)                    
+    assert(success, "Couldn't create mem save directory!")
 end
 
 function sys.quit()
-
-	-- save mem
-    local success = love.filesystem.createDirectory(MEM_DIR)
-    for m = sys.limits.mem.min, sys.limits.mem.max do
-        local filepath = MEM_DIR .. "/" .. m .. ".json"
-		util.saveJsonFile(filepath, sys.memory[m])
-    end
 
 	-- save player
     util.saveJsonFile("player.json", sys.player.setup)
@@ -158,6 +154,7 @@ function sys.quit()
 	-- save display
     util.saveJsonFile("display.json", sys.display)
 
+    -- mem saved after each change, so no need to save
 end
 
 function sys._getLoopLen(deck)
@@ -324,6 +321,12 @@ function sys.deckTouch(deck)
     sys.memTouch(deck)
 end
 
+function sys.deckSave(deck)
+    local m = sys.player.setup[deck].pattern
+    local filepath = MEM_DIR .. "/" .. m .. ".json"
+    util.saveJsonFile(filepath, sys.memory[m])
+end
+
 -----------
 -- TRACK --
 -----------
@@ -414,10 +417,12 @@ end
 
 function sys.volInc(deck, track) 
     sys.incTrackVal("vol", deck, track)
+    sys.deckSave(deck)
 end
 
 function sys.volDec(deck, track) 
     sys.decTrackVal("vol", deck, track)
+    sys.deckSave(deck)
 end
 
 function sys.volTouch(deck) 
@@ -439,10 +444,12 @@ end
 
 function sys.sndInc(deck, track) 
     sys.incTrackVal("snd", deck, track)
+    sys.deckSave(deck)
 end
 
 function sys.sndDec(deck, track) 
     sys.decTrackVal("snd", deck, track)
+    sys.deckSave(deck)
 end
 
 function sys.sndTouch(deck) 
@@ -466,10 +473,12 @@ end
 
 function sys.numInc(deck, track) 
     sys.incTrackVal("num", deck, track)
+    sys.deckSave(deck)
 end
 
 function sys.numDec(deck, track) 
     sys.decTrackVal("num", deck, track)
+    sys.deckSave(deck)
 end
 
 function sys.numTouch(deck) 
@@ -495,10 +504,12 @@ end
 
 function sys.rotInc(deck, track) 
     sys.incTrackVal("rot", deck, track)
+    sys.deckSave(deck)
 end
 
 function sys.rotDec(deck, track) 
     sys.decTrackVal("rot", deck, track)
+    sys.deckSave(deck)
 end
 
 function sys.rotTouch(deck) 
@@ -536,6 +547,7 @@ function sys.lenInc(deck)
     sys.memory[pattern_index].len = val
     sys.lenTouch(deck)
     sys._setTotalProgress(prev, deck)
+    sys.deckSave(deck)
 end
 
 function sys.lenDec(deck) 
@@ -552,6 +564,7 @@ function sys.lenDec(deck)
     sys.memory[pattern_index].len = val
     sys.lenTouch(deck)
     sys._setTotalProgress(prev, deck)
+    sys.deckSave(deck)
 end
 
 function sys.lenTouch(deck) 
