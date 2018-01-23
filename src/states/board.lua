@@ -290,7 +290,7 @@ function Board:draw()
         local point_a, point_b = unpack(line)
         local ax, ay = util.camAdjustPos(point_a, self.cam)
         local bx, by = util.camAdjustPos(point_b, self.cam)
-        love.graphics.setColor(unpack(colors.track[track].up_selected))
+        love.graphics.setColor(unpack(colors.track[track].down_selected))
         love.graphics.line(ax, ay, bx, by)
     end
 
@@ -380,7 +380,10 @@ function Board:draw()
         button:draw()
     end
 
-    -- TODO draw bars
+    -- bars for odd aspect ratios
+    love.graphics.setColor(unpack(colors.black))
+    love.graphics.rectangle("fill", - gfx.width, 0, gfx.width, gfx.height)
+    love.graphics.rectangle("fill", gfx.width, 0, gfx.width, gfx.height)
 end
 
 return Board
