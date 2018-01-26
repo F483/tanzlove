@@ -319,7 +319,7 @@ function Board:draw()
     local x, y, w, h = util.camAdjustRect(rects.fader, self.cam)
     love.graphics.setColor(r, g, b) 
     love.graphics.rectangle("fill", x, y, w, h)
-    love.graphics.setColor(255 - r, 255 - g, 255 - b) 
+    love.graphics.setColor(util.colorInvert(r, g, b))
     love.graphics.line(x + w * rf, y - 1.0, x + w * rf, y + 9.0)
 
     -- track orbits
@@ -331,11 +331,13 @@ function Board:draw()
         local rot_rf = outer_r - ((t-1) * orbit_delta) + orbit_delta / 2
 
         -- draw background circle
-        local color = colors.gray
+        local track_color = colors.gray
+        local beat_color = colors.track[t].up_selected
         if sys.getSelectedTrack() == t then
-            color = colors.track[t].up_selected
+            track_color = colors.track[t].up_selected
+            beat_color = {util.colorInvert(unpack(track_color))}
         end
-        love.graphics.setColor(unpack(color))
+        love.graphics.setColor(unpack(track_color))
         love.graphics.circle("line", x, y, orbit_r, 64)
 
         -- draw orbit beat backgrounds
@@ -344,8 +346,7 @@ function Board:draw()
         local rhythm = sys.getRhythm(d, t)
         for b = 1, len do
 
-            -- TODO draw beats recently played
-            
+            love.graphics.setColor(unpack(track_color))
             local fraction = math.pi * 2 * ((b - 1) / (len))
 
             -- draw track rotation hand
@@ -365,6 +366,11 @@ function Board:draw()
                 r = 2.25
             end
             love.graphics.circle("fill", tx, ty, r, 16)
+
+            -- highlight beats recently
+            love.graphics.setColor(unpack(beat_color))
+            local beat_progress = sys.getBeatProgress(d, t, b)
+            love.graphics.circle("fill", tx, ty, r * beat_progress, 16)
         end
     end
 

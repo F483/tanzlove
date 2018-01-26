@@ -9,6 +9,10 @@ function util.camAdjustPos(pos, cam)
     return px - cx, py - cy
 end
 
+function util.colorInvert(r, g, b)
+    return 255 - r, 255 - g, 255 - b
+end
+
 function util.camAdjustRect(rect, cam)
     local rx, ry, rw, rh = unpack(rect)
     local cx, cy = unpack(cam)

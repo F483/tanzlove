@@ -225,7 +225,7 @@ function sys.update(dt)
             if audable and vol > 0.0 and data.num > 0 then
                 local len = sys.getLen(deck)
                 local last_played = sys.player.history[deck][track]
-                local last_expected = sys._getLastExpected(deck, track)
+                local last_expected = sys._getPrevProgress(deck, track)
                 local total_progress = sys._getTotalProgress(deck)
                 local skip = total_progress - last_expected > 1.0 / len
                 if last_expected > last_played and not skip then
@@ -238,24 +238,64 @@ function sys.update(dt)
     
 end
 
-function sys._getLastExpected(deck, track)
+function sys.getBeatProgress(deck, track, beat)
+    -- between 1.0 for just triggers or 0.0 for other beat played
+    
+    local rhythm = sys.getRhythm(deck, track)
+    if rhythm[beat] == 0 then
+        return 0.0
+    end
+
+    local len = sys.getLen(deck)
+    local p_total = sys._getTotalProgress(deck)
+    local p_beat = math.floor(p_total) + (beat - 1) / len
+    local p_next_expected = sys._getNextProgress(deck, track, beat)
+    if p_beat <= p_total and p_total <= p_next_expected then
+        return 1.0 - (p_total - p_beat) / (p_next_expected - p_beat)
+    end
+    return 0.0
+end
+
+function sys._getNextProgress(deck, track, beat)
+
+    local len = sys.getLen(deck)
+    local total_progress = sys._getTotalProgress(deck)
+    local loop_progress = sys.getLoopProgress()
+    local step_index = beat or math.ceil(loop_progress * len)
+    local rhythm = sys.getRhythm(deck, track)
+
+    -- rotate until we find the next beat to be played
+    for rot = 1, len do
+        local index = (((step_index - 1) + rot) % len) + 1
+        if rhythm[index] ~= 0 then
+            if index <= step_index then
+                return math.floor(total_progress) + index / len + 1.0
+            else
+                return math.floor(total_progress) + index / len
+            end
+        end
+    end
+    return nil
+end
+
+function sys._getPrevProgress(deck, track, beat)
 
     local len = sys.getLen(deck)
     local rhythm = sys.getRhythm(deck, track)
     local total_progress = sys._getTotalProgress(deck)
     local loop_progress = sys.getLoopProgress()
-    local current_step_index = math.ceil(loop_progress * len)
+    local step_index = beat or math.ceil(loop_progress * len)
 
     -- rotate until we find the last beat played
-    local expected = - 2 / len -- always skipped
     for rot = 0, len - 1 do
-        local index = ((current_step_index + 15 - rot) % len) + 1
+        local index = (((step_index - 1) + len - rot) % len) + 1
         if rhythm[index] ~= 0 then
             local step_remainder = total_progress % (1.0 / len)
             return total_progress - rot / len - step_remainder
         end
     end
-    return expected
+    -- FIXME return nil instead and handle it
+    return - 2 / len -- so old it always triggers playing the first beat
 end
 
 
