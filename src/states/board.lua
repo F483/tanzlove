@@ -17,11 +17,10 @@ local Board = {
     buttons = {}
 }
 
-function Board:_addSelectorButtons(rect, onInc, onDec, onPress, onOver)
+function Board:_addSelectorButtons(rect, onInc, onDec, onPress)
     local x, y, w, h = unpack(rect)
     local dec = Button({x, y, 8, 8}, self.cam, onDec)
-    local show = Button({x + 8, y, 24, 8}, self.cam, onPress,
-                        onOver, false, false)
+    local show = Button({x + 8, y, 24, 8}, self.cam, onPress, false, false)
     local inc = Button({x + 8 + 24, y, 8, 8}, self.cam, onInc)
     table.insert(self.buttons, inc)
     table.insert(self.buttons, dec)
@@ -58,7 +57,6 @@ function Board:_initDeck(deck)
         rects[deck].vol, 
         function () sys.volInc(deck) end, 
         function () sys.volDec(deck) end, 
-        function () sys.volTouch(deck) end,
         function () sys.volTouch(deck) end
     )
 
@@ -67,8 +65,10 @@ function Board:_initDeck(deck)
         rects[deck].snd, 
         function () sys.sndInc(deck) end, 
         function () sys.sndDec(deck) end, 
-        function () sys.play(deck, track) end,
-        function () sys.sndTouch(deck) end
+        function () 
+            sys.play(deck, track) 
+            sys.sndTouch(deck)
+        end
     )
 
     -- num
@@ -76,7 +76,6 @@ function Board:_initDeck(deck)
         rects[deck].num, 
         function () sys.numInc(deck) end, 
         function () sys.numDec(deck) end, 
-        function () sys.numTouch(deck) end,
         function () sys.numTouch(deck) end
     )
 
@@ -85,7 +84,6 @@ function Board:_initDeck(deck)
         rects[deck].rot, 
         function () sys.rotInc(deck) end, 
         function () sys.rotDec(deck) end, 
-        function () sys.rotTouch(deck) end,
         function () sys.rotTouch(deck) end
     )
 
@@ -94,7 +92,6 @@ function Board:_initDeck(deck)
         rects[deck].len, 
         function () sys.lenInc(deck) end, 
         function () sys.lenDec(deck) end, 
-        function () sys.lenTouch(deck) end,
         function () sys.lenTouch(deck) end
     )
 
@@ -103,7 +100,6 @@ function Board:_initDeck(deck)
         rects[deck].mem, 
         function () sys.memInc(deck) end, 
         function () sys.memDec(deck) end, 
-        function () sys.memTouch(deck) end,
         function () sys.memTouch(deck) end
     )
 
@@ -126,7 +122,6 @@ function Board:init()
         rects.bpm, 
         sys.bpmInc, 
         sys.bpmDec, 
-        sys.bpmTouch,
         sys.bpmTouch
     )
 
@@ -227,11 +222,6 @@ function Board:update(delta_time)
     self.cam[1] = cx
     self.cam[2] = cy
 
-    -- update buttons
-    for i, button in ipairs(self.buttons) do
-        button:update(delta_time)
-    end
-
     -- update fader
     local mx, my = unpack(gfx.fromWinPos({love.mouse.getPosition()}))
     local over_fader = util.overRect(mx, my, rects.fader, self.cam)
@@ -331,12 +321,8 @@ function Board:draw()
         local rot_rf = outer_r - ((t-1) * orbit_delta) + orbit_delta / 2
 
         -- draw background circle
-        local track_color = colors.gray
-        local beat_color = colors.track[t].up_selected
-        if sys.getSelectedTrack() == t then
-            track_color = colors.track[t].up_selected
-            beat_color = {util.colorInvert(unpack(track_color))}
-        end
+        local track_color = colors.track[t].up_selected
+        local beat_color = {util.colorInvert(unpack(track_color))}
         love.graphics.setColor(unpack(track_color))
         love.graphics.circle("line", x, y, orbit_r, 64)
 
@@ -347,19 +333,19 @@ function Board:draw()
         for b = 1, len do
 
             love.graphics.setColor(unpack(track_color))
-            local fraction = math.pi * 2 * ((b - 1) / (len))
+            local phi = math.pi * 2 * ((b - 1) / (len))
 
             -- draw track rotation hand
             if rot == b-1 then
-                local sdx, sdy = vector.rotate(fraction, 0.0, - rot_rs)
+                local sdx, sdy = vector.rotate(phi, 0.0, - rot_rs)
                 local stx, sty = vector.add(x, y, sdx, sdy)
-                local fdx, fdy = vector.rotate(fraction, 0.0, - rot_rf)
+                local fdx, fdy = vector.rotate(phi, 0.0, - rot_rf)
                 local ftx, fty = vector.add(x, y, fdx, fdy)
                 love.graphics.line(stx, sty, ftx, fty)
             end
 
             -- draw beat
-            local dx, dy = vector.rotate(fraction, 0.0, - orbit_r)
+            local dx, dy = vector.rotate(phi, 0.0, - orbit_r)
             local tx, ty = vector.add(x, y, dx, dy)
             local r = 1.25
             if rhythm[b] ~= 0 then
@@ -368,18 +354,22 @@ function Board:draw()
             love.graphics.circle("fill", tx, ty, r, 16)
 
             -- highlight beats recently
-            love.graphics.setColor(unpack(beat_color))
-            local beat_progress = sys.getBeatProgress(d, t, b)
-            love.graphics.circle("fill", tx, ty, r * beat_progress, 16)
+            local br, bg, bb = unpack(beat_color)
+            local beat_level = sys.getBeatLevel(d, t, b)
+            love.graphics.setColor(br, bg, bb, beat_level * 255)
+            love.graphics.circle("fill", tx, ty, r * beat_level, 16)
         end
     end
 
     -- draw clock hand
-    local progress = sys.getLoopProgress()
-    local dx, dy = vector.rotate(math.pi *2.0 * progress, 0.0, - (outer_r+4))
-    local tx, ty = vector.add(x, y, dx, dy)
     love.graphics.setColor(unpack(colors.gray))
-    love.graphics.line(x, y, tx, ty)
+    local progress = sys.getLoopProgress()
+    local phi = math.pi * 2.0 * progress
+    local dix, diy = vector.rotate(phi, 0.0, - (outer_r-(orbit_delta * 3)))
+    local ix, iy = vector.add(x, y, dix, diy)
+    local dox, doy = vector.rotate(phi, 0.0, - (outer_r))
+    local ox, oy = vector.add(x, y, dox, doy)
+    love.graphics.line(ix, iy, ox, oy)
 
     -- draw buttons
     for i, button in ipairs(self.buttons) do

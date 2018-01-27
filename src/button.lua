@@ -7,11 +7,10 @@ local COLOR_MOUSE_DOWN = {255, 255, 255, 65}
 
 local Button = Class{}
 
-function Button:init(rect, cam, onPress, onOver, drawPress, drawOver)
+function Button:init(rect, cam, onPress, drawPress, drawOver)
     self.rect = rect
     self.cam = cam
     self.onPress = onPress
-    self.onOver = onOver
     self.drawPress = drawPress == nil or drawPress == true -- default to true
     self.drawOver = drawOver == nil or drawOver == true -- default to true
 end
@@ -27,14 +26,6 @@ function Button:mousepressed(x, y, button, istouch)
         return true
     end
     return false
-end
-
-function Button:update(delta_time)
-    local mx, my = unpack(gfx.fromWinPos({love.mouse.getPosition()}))
-    local mouse_over = self:_overButton(mx, my)
-    if mouse_over and self.onOver ~= nil then
-        self.onOver()
-    end
 end
 
 function Button:draw()

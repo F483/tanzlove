@@ -238,7 +238,7 @@ function sys.update(dt)
     
 end
 
-function sys.getBeatProgress(deck, track, beat)
+function sys.getBeatLevel(deck, track, beat)
     -- between 1.0 for just triggers or 0.0 for other beat played
     
     local rhythm = sys.getRhythm(deck, track)
