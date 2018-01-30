@@ -174,9 +174,6 @@ function Board:_drawTrackButtons(deck, t)
 
     -- select track
     local color = colors.track[t].up_inactive
-    if sys.getSelectedTrack(deck) == t then
-        color = colors.track[t].down_selected
-    end
     self:_drawField(color, colors.eigengrau, t, rects[deck].track[t]["select"])
 
     -- mute track
@@ -280,11 +277,11 @@ function Board:draw()
         local point_a, point_b = unpack(line)
         local ax, ay = util.camAdjustPos(point_a, self.cam)
         local bx, by = util.camAdjustPos(point_b, self.cam)
-        love.graphics.setColor(unpack(colors.track[track].down_selected))
+        love.graphics.setColor(unpack(colors.track[track].up_selected))
         love.graphics.line(ax, ay, bx, by)
     end
 
-    self:_drawField(colors.eigengrau, colors.white, "TANZBOY.IO", rects.logo)
+    self:_drawField(colors.eigengrau, colors.white, " TANZ BOY ", rects.logo)
     self:_drawField(colors.eigengrau, colors.white, "EXIT#", rects.exit)
 
     -- bmp

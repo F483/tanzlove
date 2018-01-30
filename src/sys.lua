@@ -33,7 +33,7 @@ local sys = {
         rot = {min=0, max=15},
         bpm = {min=1, max=255},
         len = {min=1, max=16},
-        mem = {min=1, max=128},
+        mem = {min=1, max=64},
         tracks = 4
     },
 
