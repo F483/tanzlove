@@ -3,7 +3,7 @@ local gfx = require("src.gfx")
 local Board = require("src.states.board")
 
 local ENTER = 0.5 -- fade in time
-local HOLD = 1.0 -- hold time
+local HOLD = 2.0 -- hold time
 local LEAVE = 0.5 -- fade out time
 
 local Studio = {}

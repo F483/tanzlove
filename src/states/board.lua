@@ -117,6 +117,9 @@ end
 
 function Board:init()
 
+    gfx.loadUniformSpriteSheet("board", "gfx/board.png")
+    gfx.loadUniformSpriteSheet("avatar", "gfx/avatar.png")
+
     -- bpm button
     self:_addSelectorButtons(
         rects.bpm, 
@@ -267,8 +270,11 @@ end
 function Board:draw()
 
     -- background
-    love.graphics.setColor(unpack(colors.eigengrau))
-    love.graphics.rectangle("fill", 0, 0, gfx.width, gfx.height)
+    love.graphics.setColor(colors.white) 
+    gfx.drawSprite("board", util.camAdjustPos({0, 0}, self.cam))
+
+    -- draw avatar
+    gfx.drawSprite("avatar", util.camAdjustPos({118 - 12, 50 - 12}, self.cam))
 
     -- draw background lines
     local track = sys.getSelectedTrack()
@@ -281,7 +287,7 @@ function Board:draw()
         love.graphics.line(ax, ay, bx, by)
     end
 
-    self:_drawField(colors.eigengrau, colors.white, " TANZ BOY ", rects.logo)
+    self:_drawField(colors.eigengrau, colors.white, "TANZ.LOVE", rects.logo)
     self:_drawField(colors.eigengrau, colors.white, "EXIT#", rects.exit)
 
     -- bmp

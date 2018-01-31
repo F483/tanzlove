@@ -16,10 +16,10 @@ local DEFAULT_PATTERN = {
 local MEM_DIR = "mem"
 
 local SAMPLES = {
-    "snd/BDL.wav", "snd/BDS.wav", "snd/CLP.wav", "snd/CLV.wav",
-    "snd/CNG.wav", "snd/COW.wav", "snd/CYM.wav", "snd/HHC.wav",
-    "snd/HHO.wav", "snd/HHP.wav", "snd/SD1.wav", "snd/SD2.wav",
-    "snd/SHK.wav", "snd/TML.wav", "snd/TMM.wav", "snd/TMH.wav",
+    "snd/808/BDL.wav", "snd/808/BDS.wav", "snd/808/CLP.wav", "snd/808/CLV.wav",
+    "snd/808/CNG.wav", "snd/808/COW.wav", "snd/808/CYM.wav", "snd/808/HHC.wav",
+    "snd/808/HHO.wav", "snd/808/HHP.wav", "snd/808/SD1.wav", "snd/808/SD2.wav",
+    "snd/808/SHK.wav", "snd/808/TML.wav", "snd/808/TMM.wav", "snd/808/TMH.wav",
 }
 
 local sys = {

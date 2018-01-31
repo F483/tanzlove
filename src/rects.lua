@@ -1,5 +1,5 @@
 return {
-    logo = {80, 4, 76, 8},
+    logo = {84, 4, 68, 8},
     atom = {118, 50, 34, 6}, -- x, y, radius, delta
     exit = {4, 4, 40, 8},
     bpm = {192, 4, 40, 8},
