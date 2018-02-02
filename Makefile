@@ -1,6 +1,6 @@
 PROJECT_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 PROJECT_NAME := $(notdir $(patsubst %/,%,$(dir $(PROJECT_PATH))))
-FILES_REGEX := "(.*\.lua|./mem.*\.json|./snd.*\.wav|./gfx.*\.png)$$"
+FILES_REGEX := "(.*\.lua|./mem.*\.json|./snd.*\.WAV|./gfx.*\.png)$$"
 GAME_FILES := $(shell find . -regextype posix-egrep -regex $(FILES_REGEX))
 BUILD_FILE := $(PROJECT_NAME)_$(shell date +%Y%m%dT%H%M%S).love
 
