@@ -6,7 +6,6 @@ local Studio = require("src.states.studio")
 
 function love.load()
     gfx.init()
-    -- board.init()
     sys.init()
     euclid.init()
     Gamestate.registerEvents()
@@ -15,12 +14,10 @@ end
 
 function love.draw()
     gfx.scale()
-    -- board.draw()
 end
 
 function love.update(delta_time)
     sys.update(delta_time)
-    -- board.update(delta_time)
 end
 
 function love.quit()

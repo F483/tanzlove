@@ -1,4 +1,5 @@
 local Gamestate = require("lib.hump.gamestate")
+local colors = require("src.colors")
 local gfx = require("src.gfx")
 local Board = require("src.states.board")
 
@@ -20,27 +21,28 @@ function Studio:update(delta_time)
     end
 end
 
-function Studio:mousereleased(x, y, button)
+function Studio:mousepressed(x, y, button, istouch)
     Gamestate.switch(Board) -- any key
 end
 
-function Studio:keyreleased(key)
+function Studio:keypressed(key)
     Gamestate.switch(Board) -- any key
 end
 
 function Studio:draw()
+    love.graphics.setColor(colors.white) 
     gfx.drawSprite("studio", 0, 0)
 
     -- fade in
     if self.ttl > (LEAVE + HOLD) then
         local progress = (self.ttl - HOLD - LEAVE) / ENTER
-        gfx.colorScreen({255, 255, 255, progress * 255})
+        gfx.colorScreen({22, 22, 29, progress * 255})
     end
     
     -- fade out
     if self.ttl < LEAVE then
         local progress = 1.0 - (self.ttl / LEAVE)
-        gfx.colorScreen({0, 0, 0, progress * 255})
+        gfx.colorScreen({22, 22, 29, progress * 255})
     end
 end
 

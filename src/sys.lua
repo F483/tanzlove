@@ -64,6 +64,7 @@ local sys = {
 
         setup = {
             bpm = 128,
+		    volume = 1.0,
             fade = 1.0, -- 0.0 = left, 1.0 = right
 
             left = {

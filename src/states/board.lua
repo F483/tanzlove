@@ -1,3 +1,5 @@
+local Gamestate = require("lib.hump.gamestate")
+local Credits = require("src.states.credits")
 local gfx = require("src.gfx")
 local vector = require("lib.hump.vector-light")
 local util = require("src.util")
@@ -128,9 +130,9 @@ function Board:init()
         sys.bpmTouch
     )
 
-    -- exit button
+    -- leave button
     table.insert(self.buttons, Button(
-        rects.exit, self.cam, function () self:_exit() end
+        rects.leave, self.cam, function () self:_leave() end
     ))
 
     self:_initDeck("left")
@@ -144,14 +146,14 @@ function Board:mousepressed(x, y, mouse_button, istouch)
     end
 end
 
-function Board:_exit()
-    -- TODO save program sys
-    love.event.quit()
+function Board:_leave()
+    love.audio.setVolume(0.25)
+    Gamestate.switch(Credits)
 end
 
 function Board:keypressed(key)
     if key == "escape" then
-        self:_exit()
+        self:_leave()
     end
 end
 
@@ -176,33 +178,36 @@ end
 function Board:_drawTrackButtons(deck, t)
 
     -- select track
-    local color = colors.track[t].up_inactive
+    local color = colors.track[t].beta
+    if sys.getSelectedTrack(deck) == t then
+        color = colors.track[t].alpha
+    end
     self:_drawField(color, colors.eigengrau, t, rects[deck].track[t]["select"])
 
     -- mute track
     if sys.getSelectedTrack(deck) == t then
-        color = colors.track[t].up_selected
+        color = colors.track[t].alpha
         if sys.player.setup[deck].mute[t] then
-            color = colors.track[t].down_selected
+            color = colors.track[t].beta
         end
-    else
-        color = colors.track[t].up_inactive
+    else -- inactive
+        color = colors.track[t].beta
         if sys.player.setup[deck].mute[t] then
-            color = colors.track[t].down_inactive
+            color = colors.track[t].gamma
         end
     end
     self:_drawField(color, colors.eigengrau, "M", rects[deck].track[t]["mute"])
 
     -- solo track
     if sys.getSelectedTrack(deck) == t then
-        color = colors.track[t].up_selected
+        color = colors.track[t].alpha
         if sys.player.setup[deck].solo == t then
-            color = colors.track[t].down_selected
+            color = colors.track[t].beta
         end
     else -- inactive
-        color = colors.track[t].up_inactive
+        color = colors.track[t].beta
         if sys.player.setup[deck].solo == t then
-            color = colors.track[t].down_inactive
+            color = colors.track[t].gamma
         end
     end
     self:_drawField(color, colors.eigengrau, "S", rects[deck].track[t]["solo"])
@@ -234,8 +239,11 @@ end
 function Board:_drawDeck(d)
 
     local selected_track = sys.getSelectedTrack()
-    local track_color = colors.track[selected_track].up_selected
-    local deck_color = colors[d].up_selected -- TODO handle not selected
+    local track_color = colors.track[selected_track].alpha
+    local deck_color = colors[d].gamma
+    if d == sys.getSelectedDeck() then
+        deck_color = colors[d].alpha
+    end
 
     local label = sys.volDisplay(d)
     self:_drawSelector(track_color, colors.eigengrau, label, rects[d].vol) 
@@ -260,11 +268,7 @@ function Board:_drawDeck(d)
     if d == "right" then
         label = "R"
     end
-    local color = colors[d].up_inactive
-    if d == sys.getSelectedDeck() then
-        local color = colors[d].down_selected
-    end
-    self:_drawField(color, colors.eigengrau, label, rects[d].select)
+    self:_drawField(deck_color, colors.eigengrau, label, rects[d].select)
 end
 
 function Board:draw()
@@ -283,12 +287,12 @@ function Board:draw()
         local point_a, point_b = unpack(line)
         local ax, ay = util.camAdjustPos(point_a, self.cam)
         local bx, by = util.camAdjustPos(point_b, self.cam)
-        love.graphics.setColor(unpack(colors.track[track].up_selected))
+        love.graphics.setColor(unpack(colors.track[track].alpha))
         love.graphics.line(ax, ay, bx, by)
     end
 
     self:_drawField(colors.eigengrau, colors.white, "TANZ.LOVE", rects.logo)
-    self:_drawField(colors.eigengrau, colors.white, "EXIT#", rects.exit)
+    self:_drawField(colors.eigengrau, colors.white, "LEAVE#", rects.leave)
 
     -- bmp
     self:_drawSelector(colors.eigengrau, colors.white,
@@ -306,8 +310,8 @@ function Board:draw()
     -- deck fader
     local lf = 1.0 - sys.player.setup.fade
     local rf = sys.player.setup.fade
-    local lr, lg, lb = unpack(colors.left.up_selected)
-    local rr, rg, rb = unpack(colors.right.up_selected)
+    local lr, lg, lb = unpack(colors.left.alpha)
+    local rr, rg, rb = unpack(colors.right.alpha)
     local r, g, b = lr*lf + rr*rf, lg*lf + rg*rf, lb*lf + rb*rf
     local x, y, w, h = util.camAdjustRect(rects.fader, self.cam)
     love.graphics.setColor(r, g, b) 
@@ -324,8 +328,14 @@ function Board:draw()
         local rot_rf = outer_r - ((t-1) * orbit_delta) + orbit_delta / 2
 
         -- draw background circle
-        local track_color = colors.track[t].up_selected
-        local beat_color = {util.colorInvert(unpack(track_color))}
+        local track_color = colors.track[t].alpha
+        local beat_color = colors.white
+        if t == 1 or t == 3 then
+            beat_color = colors.black
+        end
+        if sys.getSelectedTrack(deck) ~= t then
+            track_color = colors.track[t].beta
+        end
         love.graphics.setColor(unpack(track_color))
         love.graphics.circle("line", x, y, orbit_r, 64)
 
