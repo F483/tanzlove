@@ -1,15 +1,7 @@
 
-# Credits screen (How to request app rating?)
-
--- TODO exit screen with buttons 
---       - rate app
---       - share: facebook, twitter, instagram
---       - credits
---       - fucking leave already
-
 # Level samples
-
-# How to in app purchase? Future model: Free + dlc sample packs.
+# Label fader, so its more obvious what it does.
+# Make fader snappy at edges (just the last pixel)
 
 # Shit sounds off if two mem slots have a differnet len?
 

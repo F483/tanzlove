@@ -1,5 +1,5 @@
 local Gamestate = require("lib.hump.gamestate")
-local Credits = require("src.states.credits")
+local Final = require("src.states.final")
 local gfx = require("src.gfx")
 local vector = require("lib.hump.vector-light")
 local util = require("src.util")
@@ -148,7 +148,7 @@ end
 
 function Board:_leave()
     love.audio.setVolume(0.25)
-    Gamestate.switch(Credits)
+    Gamestate.switch(Final)
 end
 
 function Board:keypressed(key)
