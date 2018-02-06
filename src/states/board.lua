@@ -232,7 +232,13 @@ function Board:update(delta_time)
     local over_fader = util.overRect(mx, my, rects.fader, self.cam)
     if over_fader and love.mouse.isDown(1) then
         local x, y, w, h = util.camAdjustRect(rects.fader, self.cam)
-        sys.player.setup.fade = (mx - x) / w
+		if mx - x < 1.0 then
+			sys.player.setup.fade = 0.0
+		elseif mx - x > w - 1.0 then
+			sys.player.setup.fade = 1.0
+		else
+			sys.player.setup.fade = (mx - x) / w
+		end
     end
 end
 
