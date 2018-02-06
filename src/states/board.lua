@@ -316,6 +316,8 @@ function Board:draw()
     local x, y, w, h = util.camAdjustRect(rects.fader, self.cam)
     love.graphics.setColor(r, g, b) 
     love.graphics.rectangle("fill", x, y, w, h)
+    love.graphics.setColor(unpack(colors.eigengrau))
+    love.graphics.print("FADE", x + ((w - 32) / 2), y)
     love.graphics.setColor(util.colorInvert(r, g, b))
     love.graphics.line(x + w * rf, y - 1.0, x + w * rf, y + 9.0)
 
