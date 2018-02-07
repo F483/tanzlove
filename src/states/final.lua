@@ -6,8 +6,8 @@ local Credits = require("src.states.credits")
 
 local RATEAPP_URL = "" -- FIXME see https://stackoverflow.com/questions/10816757/rate-this-app-link-in-google-play-store-app-on-the-phone/10816846#10816846
 local GITHUB_URL = "https://github.com/F483/tanzlove"
-local TWITTER_URL = "https://twitter.com/home?status=https%3A//tanz.love"
-local FACEBOOK_URL = "https://www.facebook.com/sharer/sharer.php?u=https%3A//tanz.love"
+local TWITTER_URL = "https://twitter.com/home?status=http%3A//tanz.love"
+local FACEBOOK_URL = "https://www.facebook.com/sharer/sharer.php?u=http%3A//tanz.love"
 
 local Final = {buttons={}}
 

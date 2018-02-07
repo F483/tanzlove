@@ -232,9 +232,9 @@ function Board:update(delta_time)
     local over_fader = util.overRect(mx, my, rects.fader, self.cam)
     if over_fader and love.mouse.isDown(1) then
         local x, y, w, h = util.camAdjustRect(rects.fader, self.cam)
-		if mx - x < 1.0 then
+		if mx - x < 1.0 then -- snap left
 			sys.player.setup.fade = 0.0
-		elseif mx - x > w - 1.0 then
+		elseif mx - x > w - 1.0 then -- snap right
 			sys.player.setup.fade = 1.0
 		else
 			sys.player.setup.fade = (mx - x) / w
@@ -244,7 +244,7 @@ end
 
 function Board:_drawDeck(d)
 
-    local selected_track = sys.getSelectedTrack()
+    local selected_track = sys.getSelectedTrack(d)
     local track_color = colors.track[selected_track].alpha
     local deck_color = colors[d].gamma
     if d == sys.getSelectedDeck() then
@@ -287,8 +287,8 @@ function Board:draw()
     gfx.drawSprite("avatar", util.camAdjustPos({118 - 12, 50 - 12}, self.cam))
 
     -- draw background lines
-    local track = sys.getSelectedTrack()
     local deck = sys.getSelectedDeck()
+    local track = sys.getSelectedTrack(deck)
     for i, line in ipairs(lines[deck][track]) do
         local point_a, point_b = unpack(line)
         local ax, ay = util.camAdjustPos(point_a, self.cam)
@@ -328,7 +328,6 @@ function Board:draw()
     love.graphics.line(x + w * rf, y - 1.0, x + w * rf, y + 9.0)
 
     -- track orbits
-    local d = sys.getSelectedDeck()
     local x, y, outer_r, orbit_delta = util.camAdjustRect(rects.atom, self.cam)
     for t = 1, sys.limits.tracks do
         local orbit_r = outer_r - ((t-1) * orbit_delta)
@@ -348,9 +347,9 @@ function Board:draw()
         love.graphics.circle("line", x, y, orbit_r, 64)
 
         -- draw orbit beat backgrounds
-        local len = sys.getLen(d)
-        local rot = sys.getRot(d, t)
-        local rhythm = sys.getRhythm(d, t)
+        local len = sys.getLen(deck)
+        local rot = sys.getRot(deck, t)
+        local rhythm = sys.getRhythm(deck, t)
         for b = 1, len do
 
             love.graphics.setColor(unpack(track_color))
@@ -376,7 +375,7 @@ function Board:draw()
 
             -- highlight beats recently
             local br, bg, bb = unpack(beat_color)
-            local beat_level = sys.getBeatLevel(d, t, b)
+            local beat_level = sys.getBeatLevel(deck, t, b)
             love.graphics.setColor(br, bg, bb, beat_level * 255)
             love.graphics.circle("fill", tx, ty, r * beat_level, 16)
         end
@@ -384,7 +383,7 @@ function Board:draw()
 
     -- draw clock hand
     love.graphics.setColor(unpack(colors.gray))
-    local progress = sys.getLoopProgress()
+    local progress = sys.getLoopProgress(deck)
     local phi = math.pi * 2.0 * progress
     local dix, diy = vector.rotate(phi, 0.0, - (outer_r-(orbit_delta * 3)))
     local ix, iy = vector.add(x, y, dix, diy)

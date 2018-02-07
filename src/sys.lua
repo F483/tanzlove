@@ -105,7 +105,7 @@ function sys.start()
 end
 
 function sys.play(deck, track, vol)
-    local deck = deck or sys.display.deck
+    assert(deck)
     local track = track or sys.display.selected[deck]
     local data = sys.getTrackData(track, deck)
     local snd = sys.player.samples[deck][track][data.snd]
@@ -171,13 +171,13 @@ function sys.quit()
 end
 
 function sys._getLoopLen(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     local factor = sys.getLen(deck) / sys.limits.len.max
     return (60.0 / sys.player.setup.bpm) * 4 * factor
 end
 
 function sys.getLoopProgress(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     return sys._getTotalProgress(deck) % 1
 end
 
@@ -273,7 +273,7 @@ function sys._getNextProgress(deck, track, beat)
 
     local len = sys.getLen(deck)
     local total_progress = sys._getTotalProgress(deck)
-    local loop_progress = sys.getLoopProgress()
+    local loop_progress = sys.getLoopProgress(deck)
     local step_index = beat or math.ceil(loop_progress * len)
     local rhythm = sys.getRhythm(deck, track)
 
@@ -296,7 +296,7 @@ function sys._getPrevProgress(deck, track, beat)
     local len = sys.getLen(deck)
     local rhythm = sys.getRhythm(deck, track)
     local total_progress = sys._getTotalProgress(deck)
-    local loop_progress = sys.getLoopProgress()
+    local loop_progress = sys.getLoopProgress(deck)
     local step_index = beat or math.ceil(loop_progress * len)
 
     -- rotate until we find the last beat played
@@ -365,7 +365,7 @@ function sys.getSelectedDeck()
 end
 
 function sys.deckTouch(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     sys.volTouch(deck)
     sys.sndTouch(deck)
     sys.numTouch(deck)
@@ -385,18 +385,18 @@ end
 -----------
 
 function sys.getSelectedTrack(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     return sys.display.selected[deck]
 end
 
 function sys.trackSelect(track, deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     sys.display.selected[deck] = track
     sys.trackTouch(deck)
 end
 
 function sys.toggleSolo(track, deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     if sys.player.setup[deck].solo == track then
         sys.player.setup[deck].solo = nil
     else
@@ -405,13 +405,13 @@ function sys.toggleSolo(track, deck)
 end
 
 function sys.toggleMute(track, deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     local current_value = sys.player.setup[deck].mute[track]
     sys.player.setup[deck].mute[track] = not current_value
 end
 
 function sys.trackTouch(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     sys.volTouch(deck)
     sys.sndTouch(deck)
     sys.numTouch(deck)
@@ -419,13 +419,13 @@ function sys.trackTouch(deck)
 end
 
 function sys.getTrackData(index, deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     local pattern_index = sys.player.setup[deck].pattern
     return sys.memory[pattern_index].tracks[index]
 end
 
 function sys.getTrackVal(prop, deck, track)
-    local deck = deck or sys.display.deck
+    assert(deck)
     local track = track or sys.display.selected[deck]
     local pattern_index = sys.player.setup[deck].pattern
     local pattern = sys.memory[pattern_index]
@@ -433,7 +433,7 @@ function sys.getTrackVal(prop, deck, track)
 end
 
 function sys.setTrackVal(prop, value, deck, track)
-    local deck = deck or sys.display.deck
+    assert(deck)
     local track = track or sys.display.selected[deck]
     local pattern_index = sys.player.setup[deck].pattern
     local pattern = sys.memory[pattern_index]
@@ -479,12 +479,12 @@ function sys.volDec(deck, track)
 end
 
 function sys.volTouch(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     sys.display.show_ttls[deck].vol = SHOW_TIME
 end
 
 function sys.volDisplay(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     if sys.display.show_ttls[deck].vol > 0.0 then
         return string.format("%03d", sys.getTrackVal("vol", deck))
     end
@@ -506,12 +506,12 @@ function sys.sndDec(deck, track)
 end
 
 function sys.sndTouch(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     sys.display.show_ttls[deck].snd = SHOW_TIME
 end
 
 function sys.sndDisplay(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     if sys.display.show_ttls[deck].snd > 0.0 then
         local val = sys.getTrackVal("snd", deck)
         local filename = SAMPLES[val]
@@ -535,12 +535,12 @@ function sys.numDec(deck, track)
 end
 
 function sys.numTouch(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     sys.display.show_ttls[deck].num = SHOW_TIME
 end
 
 function sys.numDisplay(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     if sys.display.show_ttls[deck].num > 0.0 then
         return string.format("%03d", sys.getTrackVal("num", deck))
     end
@@ -566,12 +566,12 @@ function sys.rotDec(deck, track)
 end
 
 function sys.rotTouch(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     sys.display.show_ttls[deck].rot = SHOW_TIME
 end
 
 function sys.rotDisplay(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     if sys.display.show_ttls[deck].rot > 0.0 then
         return string.format("%03d", sys.getTrackVal("rot", deck))
     end
@@ -587,7 +587,7 @@ end
 ---------
 
 function sys.lenInc(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     local prev = sys._getTotalProgress(deck)
     local pattern_index = sys.player.setup[deck].pattern
     local val = sys.memory[pattern_index].len
@@ -604,7 +604,7 @@ function sys.lenInc(deck)
 end
 
 function sys.lenDec(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     local prev = sys._getTotalProgress(deck)
     local pattern_index = sys.player.setup[deck].pattern
     local val = sys.memory[pattern_index].len
@@ -621,12 +621,12 @@ function sys.lenDec(deck)
 end
 
 function sys.lenTouch(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     sys.display.show_ttls[deck].len = SHOW_TIME
 end
 
 function sys.lenDisplay(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     if sys.display.show_ttls[deck].len > 0.0 then
         local pattern_index = sys.player.setup[deck].pattern
         return string.format("%03d", sys.memory[pattern_index].len)
@@ -635,7 +635,7 @@ function sys.lenDisplay(deck)
 end
 
 function sys.getLen(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     local pattern_index = sys.player.setup[deck].pattern
     return sys.memory[pattern_index].len
 end
@@ -645,7 +645,7 @@ end
 ---------
 
 function sys.memInc(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     local prev = sys._getTotalProgress(deck)
     local val = sys.player.setup[deck].pattern
     local max = sys.limits.mem.max
@@ -660,7 +660,7 @@ function sys.memInc(deck)
 end
 
 function sys.memDec(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     local prev = sys._getTotalProgress(deck)
     local val = sys.player.setup[deck].pattern
     local min = sys.limits.mem.min
@@ -675,12 +675,12 @@ function sys.memDec(deck)
 end
 
 function sys.memTouch(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     sys.display.show_ttls[deck].mem = SHOW_TIME
 end
 
 function sys.memDisplay(deck)
-    local deck = deck or sys.display.deck
+    assert(deck)
     if sys.display.show_ttls[deck].mem > 0.0 then
         local pattern_index = sys.player.setup[deck].pattern
         return string.format("%03d", pattern_index)

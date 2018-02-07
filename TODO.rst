@@ -2,7 +2,6 @@
 # APP
 
  * Level samples
- * Shit sounds off if two mem slots have a differnet len?
 
 # Online Presence
 
