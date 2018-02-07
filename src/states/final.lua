@@ -8,7 +8,13 @@ local Credits = require("src.states.credits")
 -- https://play.google.com/store/apps/details?id=love.tanz
 -- market://details?id=love.tanz
 
-local RATEAPP_URL = "market://details?id=love.tanz"
+local RATEAPP_URL = {}
+RATEAPP_URL["OS X"] = "http://tanz.love" -- FIXME link to itch.io instead
+RATEAPP_URL["Windows"] = "http://tanz.love" -- FIXME link to itch.io instead
+RATEAPP_URL["Linux"] = "http://tanz.love" -- FIXME link to itch.io instead
+RATEAPP_URL["Android"] = "market://details?id=love.tanz"
+RATEAPP_URL["iOS"] = "http://tanz.love" -- FIXME link to app store instead
+
 local GITHUB_URL = "https://github.com/F483/tanzlove"
 local TWITTER_URL = "https://twitter.com/home?status=http%3A//tanz.love"
 local FACEBOOK_URL = "https://www.facebook.com/sharer/sharer.php?u=http%3A//tanz.love"
@@ -20,7 +26,7 @@ function Final:init()
 
     -- rate app
     table.insert(self.buttons, Button({40, 4, 80, 12}, {0, 0}, function () 
-        love.system.openURL(RATEAPP_URL)
+        love.system.openURL(RATEAPP_URL[love.system.getOS()])
     end))
 
     -- facebook
