@@ -204,6 +204,7 @@ function sys.update(dt)
     end
 
     -- update deck clocks
+	-- FIXME merge into single clock that counts beats instead
     sys.player.clock.left = sys.player.clock.right + dt
     sys.player.clock.right = sys.player.clock.right + dt
 

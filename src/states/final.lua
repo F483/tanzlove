@@ -9,11 +9,11 @@ local Credits = require("src.states.credits")
 -- market://details?id=love.tanz
 
 local RATEAPP_URL = {}
-RATEAPP_URL["OS X"] = "http://tanz.love" -- FIXME link to itch.io instead
-RATEAPP_URL["Windows"] = "http://tanz.love" -- FIXME link to itch.io instead
-RATEAPP_URL["Linux"] = "http://tanz.love" -- FIXME link to itch.io instead
+RATEAPP_URL["OS X"] = "http://f483.itch.io/tanzlove"
+RATEAPP_URL["Windows"] = "http://f483.itch.io/tanzlove"
+RATEAPP_URL["Linux"] = "http://f483.itch.io/tanzlove"
 RATEAPP_URL["Android"] = "market://details?id=love.tanz"
-RATEAPP_URL["iOS"] = "http://tanz.love" -- FIXME link to app store instead
+RATEAPP_URL["iOS"] = "http://f483.itch.io/tanzlove" -- FIXME link to app store instead
 
 local GITHUB_URL = "https://github.com/F483/tanzlove"
 local TWITTER_URL = "https://twitter.com/home?status=http%3A//tanz.love"

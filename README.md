@@ -1,6 +1,6 @@
 # tanz.love
 
-A euclidean rhythm generation tool/toy.
+A euclidean rhythm generation tool and toy.
 
 # Feature roadmap
 
