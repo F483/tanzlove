@@ -1,6 +1,7 @@
 local util = require("src.util")
 local euclid = require("src.euclid")
 
+-- TODO factior out show time and display to seperate file
 local SHOW_TIME = 1.0 -- seconds
 
 local DEFAULT_PATTERN = {
@@ -156,7 +157,8 @@ function sys.init()
 
     -- touch mem dir to enable saving
     local success = love.filesystem.createDirectory(MEM_DIR)
-    assert(success, "Couldn't create mem save directory!")
+    local save_dir = love.filesystem.getSaveDirectory()
+    assert(success, "Couldn't create '" .. MEM_DIR .. "' dir at: " .. save_dir)
 end
 
 function sys.quit()

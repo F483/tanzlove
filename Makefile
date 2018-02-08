@@ -1,8 +1,13 @@
+
+# modify to reflect your project file structure
+FILES_REGEX := "(.*\.lua|./snd.*\.WAV|./gfx.*\.png)$$"
+
 PROJECT_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 PROJECT_NAME := $(notdir $(patsubst %/,%,$(dir $(PROJECT_PATH))))
-FILES_REGEX := "(.*\.lua|./mem.*\.json|./snd.*\.WAV|./gfx.*\.png)$$"
 GAME_FILES := $(shell find . -regextype posix-egrep -regex $(FILES_REGEX))
-BUILD_FILE := $(PROJECT_NAME)_$(shell date +%Y%m%dT%H%M%S).love
+VERSION := $(shell cat version.txt)
+TIMESTAMP := $(shell date +%Y%m%dT%H%M%S)
+BUILD_FILE := $(PROJECT_NAME)_$(VERSION)_$(TIMESTAMP).love
 
 sfxr:
 	sfxr
