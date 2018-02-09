@@ -20,14 +20,15 @@ local Board = {
 }
 
 function Board:_addSelectorButtons(rect, onInc, onDec, onPress, width)
-    local width = width or 24
+    local width = width or 24 -- FIXME deduce from rect instead!
     local x, y, w, h = unpack(rect)
-    local dec = Button({x, y, 8, 8}, self.cam, onDec)
-    local show = Button({x + 8, y, width, 8}, self.cam, onPress, false, false)
-    local inc = Button({x + 8 + width, y, 8, 8}, self.cam, onInc)
-    table.insert(self.buttons, inc)
-    table.insert(self.buttons, dec)
-    table.insert(self.buttons, show)
+    table.insert(self.buttons, Button({x, y, 8, 8}, self.cam, onDec))
+    table.insert(self.buttons, Button({x+8+width, y, 8, 8}, self.cam, onInc))
+    if onPress then
+        local show = Button({x + 8, y, width, 8}, 
+                            self.cam, onPress, false, false)
+        table.insert(self.buttons, show)
+    end
 end
 
 function Board:_initDeck(deck)
@@ -59,8 +60,7 @@ function Board:_initDeck(deck)
     self:_addSelectorButtons(
         rects[deck].vol, 
         function () sys.volInc(deck) end, 
-        function () sys.volDec(deck) end, 
-        function () sys.volTouch(deck) end
+        function () sys.volDec(deck) end
     )
 
     -- snd
@@ -70,7 +70,6 @@ function Board:_initDeck(deck)
         function () sys.sndDec(deck) end, 
         function () 
             sys.play(deck, track) 
-            sys.sndTouch(deck)
         end
     )
 
@@ -78,32 +77,28 @@ function Board:_initDeck(deck)
     self:_addSelectorButtons(
         rects[deck].num, 
         function () sys.numInc(deck) end, 
-        function () sys.numDec(deck) end, 
-        function () sys.numTouch(deck) end
+        function () sys.numDec(deck) end
     )
 
     -- rot
     self:_addSelectorButtons(
         rects[deck].rot, 
         function () sys.rotInc(deck) end, 
-        function () sys.rotDec(deck) end, 
-        function () sys.rotTouch(deck) end
+        function () sys.rotDec(deck) end
     )
 
     -- len
     self:_addSelectorButtons(
         rects[deck].len, 
         function () sys.lenInc(deck) end, 
-        function () sys.lenDec(deck) end, 
-        function () sys.lenTouch(deck) end
+        function () sys.lenDec(deck) end
     )
 
     -- mem
     self:_addSelectorButtons(
         rects[deck].mem, 
         function () sys.memInc(deck) end, 
-        function () sys.memDec(deck) end, 
-        function () sys.memTouch(deck) end
+        function () sys.memDec(deck) end
     )
 
     -- select deck
@@ -125,13 +120,7 @@ function Board:init()
     gfx.loadUniformSpriteSheet("avatar", "gfx/avatar.png")
 
     -- bpm button
-    self:_addSelectorButtons(
-        rects.bpm, 
-        sys.bpmInc, 
-        sys.bpmDec, 
-        sys.bpmTouch,
-        32
-    )
+    self:_addSelectorButtons(rects.bpm, sys.bpmInc, sys.bpmDec, nil, 32)
 
     -- leave button
     table.insert(self.buttons, Button(

@@ -1,9 +1,6 @@
 local util = require("src.util")
 local euclid = require("src.euclid")
 
--- TODO factior out show time and display to seperate file
-local SHOW_TIME = 1.0 -- seconds
-
 local DEFAULT_PATTERN = {
     len = 16,
     tracks = {
@@ -86,11 +83,6 @@ local sys = {
         selected = {
             left = 1,
             right = 1
-        },
-        show_ttls = {
-            bpm = 0.0,
-            left = {len=0.0, mem=0.0, vol=0.0, snd=0.0, num=0.0, rot=0.0},
-            right = {len=0.0, mem=0.0, vol=0.0, snd=0.0, num=0.0, rot=0.0}
         },
     },
 }
@@ -210,22 +202,6 @@ function sys.update(dt)
     sys.player.clock.left = sys.player.clock.right + dt
     sys.player.clock.right = sys.player.clock.right + dt
 
-    -- update ttls
-    local ttls = sys.display.show_ttls
-    ttls.bpm = math.max(0.0, ttls.bpm - dt)
-    ttls.left.len = math.max(0.0, ttls.left.len - dt)
-    ttls.left.mem = math.max(0.0, ttls.left.mem - dt)
-    ttls.left.vol = math.max(0.0, ttls.left.vol - dt)
-    ttls.left.snd = math.max(0.0, ttls.left.snd - dt)
-    ttls.left.num = math.max(0.0, ttls.left.num - dt)
-    ttls.left.rot = math.max(0.0, ttls.left.rot - dt)
-    ttls.right.len = math.max(0.0, ttls.right.len - dt)
-    ttls.right.mem = math.max(0.0, ttls.right.mem - dt)
-    ttls.right.vol = math.max(0.0, ttls.right.vol - dt)
-    ttls.right.snd = math.max(0.0, ttls.right.snd - dt)
-    ttls.right.num = math.max(0.0, ttls.right.num - dt)
-    ttls.right.rot = math.max(0.0, ttls.right.rot - dt)
-
     -- play samples if needed
     for i, deck in ipairs({"left", "right"}) do
         for track = 1, sys.limits.tracks do
@@ -325,7 +301,6 @@ function sys.bpmInc()
 
     local val = sys.player.setup.bpm
     sys.player.setup.bpm = math.min(val + 1, sys.limits.bpm.max)
-    sys.bpmTouch()
 
     sys._setTotalProgress(prev_left, "left")
     sys._setTotalProgress(prev_right, "right")
@@ -337,14 +312,9 @@ function sys.bpmDec()
 
     local val = sys.player.setup.bpm
     sys.player.setup.bpm = math.max(val - 1, sys.limits.bpm.min)
-    sys.bpmTouch()
 
     sys._setTotalProgress(prev_left, "left")
     sys._setTotalProgress(prev_right, "right")
-end
-
-function sys.bpmTouch()
-    sys.display.show_ttls.bpm = SHOW_TIME
 end
 
 function sys.getBpm()
@@ -357,21 +327,10 @@ end
 
 function sys.deckSelect(deck)
     sys.display.deck = deck
-    sys.deckTouch(deck)
 end
 
 function sys.getSelectedDeck()
     return sys.display.deck
-end
-
-function sys.deckTouch(deck)
-    assert(deck)
-    sys.volTouch(deck)
-    sys.sndTouch(deck)
-    sys.numTouch(deck)
-    sys.rotTouch(deck)
-    sys.lenTouch(deck)
-    sys.memTouch(deck)
 end
 
 function sys.deckSave(deck)
@@ -392,7 +351,6 @@ end
 function sys.trackSelect(track, deck)
     assert(deck)
     sys.display.selected[deck] = track
-    sys.trackTouch(deck)
 end
 
 function sys.toggleSolo(track, deck)
@@ -408,14 +366,6 @@ function sys.toggleMute(track, deck)
     assert(deck)
     local current_value = sys.player.setup[deck].mute[track]
     sys.player.setup[deck].mute[track] = not current_value
-end
-
-function sys.trackTouch(deck)
-    assert(deck)
-    sys.volTouch(deck)
-    sys.sndTouch(deck)
-    sys.numTouch(deck)
-    sys.rotTouch(deck)
 end
 
 function sys.getTrackData(index, deck)
@@ -449,7 +399,6 @@ function sys.incTrackVal(prop, deck, track)
         val = math.min(val + 1, max)
     end
     sys.setTrackVal(prop, val, deck, track)
-    sys.display.show_ttls[deck][prop] = SHOW_TIME
 end
 
 function sys.decTrackVal(prop, deck, track)
@@ -461,7 +410,6 @@ function sys.decTrackVal(prop, deck, track)
         val = math.max(val - 1, min)
     end
     sys.setTrackVal(prop, val, deck, track)
-    sys.display.show_ttls[deck][prop] = SHOW_TIME
 end
 
 ---------
@@ -476,11 +424,6 @@ end
 function sys.volDec(deck, track)
     sys.decTrackVal("vol", deck, track)
     sys.deckSave(deck)
-end
-
-function sys.volTouch(deck)
-    assert(deck)
-    sys.display.show_ttls[deck].vol = SHOW_TIME
 end
 
 function sys.getVol(deck, track)
@@ -499,11 +442,6 @@ end
 function sys.sndDec(deck, track)
     sys.decTrackVal("snd", deck, track)
     sys.deckSave(deck)
-end
-
-function sys.sndTouch(deck)
-    assert(deck)
-    sys.display.show_ttls[deck].snd = SHOW_TIME
 end
 
 function sys.sndName(deck)
@@ -527,11 +465,6 @@ function sys.numDec(deck, track)
     sys.deckSave(deck)
 end
 
-function sys.numTouch(deck)
-    assert(deck)
-    sys.display.show_ttls[deck].num = SHOW_TIME
-end
-
 function sys.getNum(deck, track)
     return sys.getTrackVal("num", deck, track)
 end
@@ -548,11 +481,6 @@ end
 function sys.rotDec(deck, track)
     sys.decTrackVal("rot", deck, track)
     sys.deckSave(deck)
-end
-
-function sys.rotTouch(deck)
-    assert(deck)
-    sys.display.show_ttls[deck].rot = SHOW_TIME
 end
 
 function sys.getRot(deck, track)
@@ -575,7 +503,6 @@ function sys.lenInc(deck)
         val = math.min(val + 1, max)
     end
     sys.memory[pattern_index].len = val
-    sys.lenTouch(deck)
     sys._setTotalProgress(prev, deck)
     sys.deckSave(deck)
 end
@@ -592,23 +519,8 @@ function sys.lenDec(deck)
         val = math.max(val - 1, min)
     end
     sys.memory[pattern_index].len = val
-    sys.lenTouch(deck)
     sys._setTotalProgress(prev, deck)
     sys.deckSave(deck)
-end
-
-function sys.lenTouch(deck)
-    assert(deck)
-    sys.display.show_ttls[deck].len = SHOW_TIME
-end
-
-function sys.lenDisplay(deck)
-    assert(deck)
-    if sys.display.show_ttls[deck].len > 0.0 then
-        local pattern_index = sys.player.setup[deck].pattern
-        return string.format("%03d", sys.memory[pattern_index].len)
-    end
-    return "LEN"
 end
 
 function sys.getLen(deck)
@@ -633,7 +545,6 @@ function sys.memInc(deck)
     end
     sys.player.setup[deck].pattern = val
     sys._setTotalProgress(prev, deck)
-    sys.deckTouch(deck)
 end
 
 function sys.memDec(deck)
@@ -648,12 +559,6 @@ function sys.memDec(deck)
     end
     sys.player.setup[deck].pattern = val
     sys._setTotalProgress(prev, deck)
-    sys.deckTouch(deck)
-end
-
-function sys.memTouch(deck)
-    assert(deck)
-    sys.display.show_ttls[deck].mem = SHOW_TIME
 end
 
 function sys.getMem(deck)
