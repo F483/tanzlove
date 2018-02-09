@@ -321,6 +321,14 @@ function sys.getBpm()
     return string.format("%03d", sys.player.setup.bpm)
 end
 
+function sys.onBeat()
+    local deck = sys.getSelectedDeck()
+    local len = sys.getLen(deck)
+    local total = sys._getTotalProgress(deck)
+    local dist = 4 / len
+    return math.floor(total / dist) % 2 == 0
+end
+
 ----------
 -- DECK --
 ----------

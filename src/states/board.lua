@@ -178,7 +178,11 @@ function Board:_drawBpm()
     love.graphics.rectangle("fill", x, y, w, h)
     love.graphics.setColor(unpack(colors.white))
     love.graphics.print("<", x, y) -- left arrow
-    gfx.drawSprite("icons", x + 8, y, 2, 4)
+    if sys.onBeat() then
+        gfx.drawSprite("icons", x + 8, y, 2, 4)
+    else -- off beat
+        gfx.drawSprite("icons", x + 8, y, 3, 4)
+    end
     love.graphics.print(text, x + 16, y) -- text
     love.graphics.print(">", x + w - 8, y) -- left arrow
 end
