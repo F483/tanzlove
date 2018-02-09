@@ -17,22 +17,22 @@ local DEFAULT_PATTERN = {
 local MEM_DIR = "mem"
 
 local SAMPLES = {
-    "snd/nlp/BDL.WAV",
-    "snd/nlp/BDS.WAV",
-    "snd/nlp/CLP.WAV",
-    "snd/nlp/CLV.WAV",
-    "snd/nlp/CNG.WAV",
-    "snd/nlp/COW.WAV",
-    "snd/nlp/CYM.WAV",
-    "snd/nlp/HHC.WAV",
-    "snd/nlp/HHO.WAV",
-    "snd/nlp/HHP.WAV",
-    "snd/nlp/SD1.WAV",
-    "snd/nlp/SD2.WAV",
-    "snd/nlp/SHK.WAV",
-    "snd/nlp/TML.WAV",
-    "snd/nlp/TMM.WAV",
-    "snd/nlp/TMH.WAV",
+    "snd/nlp/BL.WAV", -- bass drum long
+    "snd/nlp/BS.WAV", -- bass drum short
+    "snd/nlp/CP.WAV", -- clap
+    "snd/nlp/CV.WAV", -- clave
+    "snd/nlp/CN.WAV", -- conga
+    "snd/nlp/CB.WAV", -- cowbell
+    "snd/nlp/CY.WAV", -- cymbal
+    "snd/nlp/HC.WAV", -- high hat closed
+    "snd/nlp/HO.WAV", -- high hat open
+    "snd/nlp/HP.WAV", -- high hat pedal
+    "snd/nlp/S1.WAV", -- snare one
+    "snd/nlp/S2.WAV", -- snare two
+    "snd/nlp/SK.WAV", -- shaker
+    "snd/nlp/TL.WAV", -- tom low
+    "snd/nlp/TM.WAV", -- tom mid
+    "snd/nlp/TH.WAV", -- tom high
 }
 
 local sys = {
@@ -45,7 +45,7 @@ local sys = {
         num = {min=0, max=16},
         rot = {min=0, max=15},
         bpm = {min=1, max=255},
-        len = {min=1, max=16},
+        len = {min=2, max=16},
         mem = {min=1, max=64},
         tracks = 4
     },
@@ -347,11 +347,8 @@ function sys.bpmTouch()
     sys.display.show_ttls.bpm = SHOW_TIME
 end
 
-function sys.bpmDisplay()
-    if sys.display.show_ttls.bpm > 0.0 then
-        return string.format("%03d", sys.player.setup.bpm)
-    end
-    return "BPM"
+function sys.getBpm()
+    return string.format("%03d", sys.player.setup.bpm)
 end
 
 ----------
@@ -486,12 +483,8 @@ function sys.volTouch(deck)
     sys.display.show_ttls[deck].vol = SHOW_TIME
 end
 
-function sys.volDisplay(deck)
-    assert(deck)
-    if sys.display.show_ttls[deck].vol > 0.0 then
-        return string.format("%03d", sys.getTrackVal("vol", deck))
-    end
-    return "VOL"
+function sys.getVol(deck, track)
+    return sys.getTrackVal("vol", deck, track)
 end
 
 ---------
@@ -513,14 +506,11 @@ function sys.sndTouch(deck)
     sys.display.show_ttls[deck].snd = SHOW_TIME
 end
 
-function sys.sndDisplay(deck)
+function sys.sndName(deck)
     assert(deck)
-    if sys.display.show_ttls[deck].snd > 0.0 then
-        local val = sys.getTrackVal("snd", deck)
-        local filename = SAMPLES[val]
-        return filename:match("([^/]+).WAV$")
-    end
-    return "SND"
+    local val = sys.getTrackVal("snd", deck)
+    local filename = SAMPLES[val]
+    return filename:match("([^/]+).WAV$")
 end
 
 ---------
@@ -540,14 +530,6 @@ end
 function sys.numTouch(deck)
     assert(deck)
     sys.display.show_ttls[deck].num = SHOW_TIME
-end
-
-function sys.numDisplay(deck)
-    assert(deck)
-    if sys.display.show_ttls[deck].num > 0.0 then
-        return string.format("%03d", sys.getTrackVal("num", deck))
-    end
-    return "NUM"
 end
 
 function sys.getNum(deck, track)
@@ -571,14 +553,6 @@ end
 function sys.rotTouch(deck)
     assert(deck)
     sys.display.show_ttls[deck].rot = SHOW_TIME
-end
-
-function sys.rotDisplay(deck)
-    assert(deck)
-    if sys.display.show_ttls[deck].rot > 0.0 then
-        return string.format("%03d", sys.getTrackVal("rot", deck))
-    end
-    return "ROT"
 end
 
 function sys.getRot(deck, track)
@@ -682,13 +656,8 @@ function sys.memTouch(deck)
     sys.display.show_ttls[deck].mem = SHOW_TIME
 end
 
-function sys.memDisplay(deck)
-    assert(deck)
-    if sys.display.show_ttls[deck].mem > 0.0 then
-        local pattern_index = sys.player.setup[deck].pattern
-        return string.format("%03d", pattern_index)
-    end
-    return "MEM"
+function sys.getMem(deck)
+    return sys.player.setup[deck].pattern
 end
 
 return sys

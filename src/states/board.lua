@@ -19,11 +19,12 @@ local Board = {
     buttons = {}
 }
 
-function Board:_addSelectorButtons(rect, onInc, onDec, onPress)
+function Board:_addSelectorButtons(rect, onInc, onDec, onPress, width)
+    local width = width or 24
     local x, y, w, h = unpack(rect)
     local dec = Button({x, y, 8, 8}, self.cam, onDec)
-    local show = Button({x + 8, y, 24, 8}, self.cam, onPress, false, false)
-    local inc = Button({x + 8 + 24, y, 8, 8}, self.cam, onInc)
+    local show = Button({x + 8, y, width, 8}, self.cam, onPress, false, false)
+    local inc = Button({x + 8 + width, y, 8, 8}, self.cam, onInc)
     table.insert(self.buttons, inc)
     table.insert(self.buttons, dec)
     table.insert(self.buttons, show)
@@ -119,6 +120,7 @@ end
 
 function Board:init()
 
+    gfx.loadUniformSpriteSheet("icons", "gfx/icons.png", 6, 4)
     gfx.loadUniformSpriteSheet("board", "gfx/board.png")
     gfx.loadUniformSpriteSheet("avatar", "gfx/avatar.png")
 
@@ -127,7 +129,8 @@ function Board:init()
         rects.bpm, 
         sys.bpmInc, 
         sys.bpmDec, 
-        sys.bpmTouch
+        sys.bpmTouch,
+        32
     )
 
     -- leave button
@@ -165,14 +168,30 @@ function Board:_drawField(fill_color, text_color, text, rect)
     love.graphics.print(text, x, y)
 end
 
-function Board:_drawSelector(fill_color, text_color, text, rect)
+function Board:_drawIconSelector(fill_color, text_color, text,
+                                 rect, icon_x, icon_y)
+
     local x, y, w, h = util.camAdjustRect(rect, self.cam)
     love.graphics.setColor(unpack(fill_color))
     love.graphics.rectangle("fill", x, y, w, h)
     love.graphics.setColor(unpack(text_color))
     love.graphics.print("<", x, y) -- left arrow
-    love.graphics.print(text, x + 8, y) -- text
+    gfx.drawSprite("icons", x + 8, y, icon_x, icon_y)
+    love.graphics.print(text, x + 16, y) -- text
     love.graphics.print(">", x + 32, y) -- left arrow
+end
+
+function Board:_drawBpm()
+    local rect = rects.bpm
+    local text = sys.getBpm()
+    local x, y, w, h = util.camAdjustRect(rect, self.cam)
+    love.graphics.setColor(unpack(colors.eigengrau))
+    love.graphics.rectangle("fill", x, y, w, h)
+    love.graphics.setColor(unpack(colors.white))
+    love.graphics.print("<", x, y) -- left arrow
+    gfx.drawSprite("icons", x + 8, y, 2, 4)
+    love.graphics.print(text, x + 16, y) -- text
+    love.graphics.print(">", x + w - 8, y) -- left arrow
 end
 
 function Board:_drawTrackButtons(deck, t)
@@ -251,23 +270,36 @@ function Board:_drawDeck(d)
         deck_color = colors[d].alpha
     end
 
-    local label = sys.volDisplay(d)
-    self:_drawSelector(track_color, colors.eigengrau, label, rects[d].vol) 
+    -- draw volume level
+    local volume = sys.getVol(d)
+    local index = math.floor((volume / 16) * 6 ) + 1
+    local label = string.format("%02d", volume)
+    self:_drawIconSelector(track_color, colors.eigengrau, 
+                           label, rects[d].vol, index, 1)
     
-    label = sys.sndDisplay(d)
-    self:_drawSelector(track_color, colors.eigengrau, label, rects[d].snd) 
+    -- draw sound name
+    self:_drawIconSelector(track_color, colors.eigengrau, 
+                           sys.sndName(d), rects[d].snd, 1, 2)
     
-    label = sys.numDisplay(d)
-    self:_drawSelector(track_color, colors.eigengrau, label, rects[d].num) 
+    -- draw number of beats
+    local label = string.format("%02d", sys.getNum(d))
+    self:_drawIconSelector(track_color, colors.eigengrau, 
+                           label, rects[d].num, 2, 2)
 
-    label = sys.rotDisplay(d)
-    self:_drawSelector(track_color, colors.eigengrau, label, rects[d].rot) 
+    -- draw rotation number
+    local label = string.format("%02d", sys.getRot(d))
+    self:_drawIconSelector(track_color, colors.eigengrau, 
+                           label, rects[d].rot, 3, 2)
+
+    -- loop lenght
+    local label = string.format("%02d", sys.getLen(d))
+    self:_drawIconSelector(deck_color, colors.eigengrau, 
+                           label, rects[d].len, 1, 3)
     
-    label = sys.lenDisplay(d)
-    self:_drawSelector(deck_color, colors.eigengrau, label, rects[d].len) 
-    
-    label = sys.memDisplay(d)
-    self:_drawSelector(deck_color, colors.eigengrau, label, rects[d].mem) 
+    -- memory slot
+    local label = string.format("%02d", sys.getMem(d))
+    self:_drawIconSelector(deck_color, colors.eigengrau, 
+                           label, rects[d].mem, 2, 3)
 
     -- draw select
     local label = "L"
@@ -301,8 +333,7 @@ function Board:draw()
     self:_drawField(colors.eigengrau, colors.white, "LEAVE#", rects.leave)
 
     -- bmp
-    self:_drawSelector(colors.eigengrau, colors.white,
-                       sys.bpmDisplay(), rects.bpm)
+    self:_drawBpm()
 
     -- track buttons
     for t = 1, sys.limits.tracks do
