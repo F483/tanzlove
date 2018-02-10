@@ -11,7 +11,7 @@ A euclidean rhythm generation tool and toy.
 # Building android apk release
 
  1. [Build with startgamedev](https://qubodup.itch.io/startgamedev)
- 2. Confirm name, id, version
+ 2. Confirm manifest name, id, versions
  3. [Remove debug signature](https://stackoverflow.com/a/8992819/90351)
- 4. [32-bit zip alignment](https://stackoverflow.com/questions/22681907/you-uploaded-an-apk-that-is-not-zip-aligned-error)
+ 4. [32-bit zip align](https://stackoverflow.com/questions/22681907/you-uploaded-an-apk-that-is-not-zip-aligned-error)
  5. [Sign apk](https://stackoverflow.com/questions/10930331/how-to-sign-an-already-compiled-apk)
