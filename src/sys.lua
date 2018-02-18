@@ -13,7 +13,7 @@ local DEFAULT_PATTERN = {
 
 local MEM_DIR = "mem"
 
-local SAMPLES = {
+local SAMPLES = {     -- TODO rename to match analog rytm short names
     "snd/nlp/BL.WAV", -- bass drum long
     "snd/nlp/BS.WAV", -- bass drum short
     "snd/nlp/CP.WAV", -- clap
@@ -181,6 +181,9 @@ end
 
 function sys._setTotalProgress(progress, deck)
     sys.player.clock[deck] = progress * sys._getLoopLen(deck)
+    for i = 1, sys.limits.tracks do
+        sys.player.history[deck][i] = -123456789.0
+    end
 end
 
 function sys.getRhythm(d, t)
