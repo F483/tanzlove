@@ -2,9 +2,17 @@
 
 A euclidean rhythm generation tool and toy.
 
+![Preview](https://github.com/F483/tanzlove/raw/master/preview.png "Preview")
+
 What are euclidean rhythms?
  * [Paper by Godfried Toussaint](http://cgm.cs.mcgill.ca/~godfried/publications/banff.pdf)
  * [Video by White Noises](http://www.youtube.com/watch?v=OHS3lN6snrE)
+
+# Downloads
+
+ * [Windows](https://github.com/F483/tanzlove/raw/master/builds/tanz.love_1.0.3_android.apk)
+ * [Android](https://github.com/F483/tanzlove/raw/master/builds/tanz.love_1.0.3_android.apk)
+
 
 # Building releases
 
