@@ -42,6 +42,3 @@ luac.out
 # External Libraries
 lib
 
-# builds
-*.love
-*.apk
