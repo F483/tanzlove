@@ -10,9 +10,8 @@ What are euclidean rhythms?
 
 # Downloads
 
- * [Windows](https://github.com/F483/tanzlove/raw/master/builds/tanz.love_1.0.3_android.apk)
+ * [Windows](https://github.com/F483/tanzlove/raw/master/builds/tanz.love_1.0.3_windows.zip)
  * [Android](https://github.com/F483/tanzlove/raw/master/builds/tanz.love_1.0.3_android.apk)
-
 
 # Building releases
 
